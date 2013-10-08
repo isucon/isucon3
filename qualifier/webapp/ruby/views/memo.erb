@@ -1,0 +1,23 @@
+<p id="author">
+<% if memo["is_private"] == 1 %>
+Private
+<% else %>
+Public
+<% end %>
+Memo by <%= memo["username"] %> (<%= memo["created_at"] %>)
+</p>
+
+<hr>
+<% if older %>
+<a id="older" href="<%= url_for('/memo/') %><%= older['id'] %>">&lt; older memo</a>
+<% end %>
+|
+<% if newer %>
+<a id="newer" href="<%= url_for('/memo/') %><%= newer['id'] %>">newer memo &gt;</a>
+<% end %>
+
+<hr>
+<div id="content_html">
+<%== memo["content_html"] %>
+</div>
+

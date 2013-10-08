@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3>public memos</h3>
+<p id="pager">
+  recent {{ page * 100 + 1 }} - {{ page * 100 + 100 }} / total <span id="total">{{ total }}</span>
+</p>
+<ul id="memos">
+{% for memo in memos %}
+<li>
+  <a href="{{ url_for('memo', memo_id=memo.id, _external=True) }}">{{ memo.content.split('\n')[0] }}</a> by {{ memo.username }} ({{ memo.created_at }})
+</li>
+{% endfor %}
+</ul>
+{% endblock %}

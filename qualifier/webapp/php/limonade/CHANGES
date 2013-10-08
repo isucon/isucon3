@@ -1,0 +1,94 @@
+[Changes since last revision]
+
+[2010-10-16: VERSION 0.5.0]
+
+Fix several bugs and add many new features and tests. See [git logs](http://github.com/sofadesign/limonade/commits/master) and [lighthouse reports](http://sofadesign.lighthouseapp.com/projects/29612-limonade/tickets?q=state%3Aclosed&filter=state%3Aclosed)for a complete overview.
+
+* [NEW] `initialize` user defined hook allows initialization after libs are loaded but before routes are processed
+* [FIXED] error_handler_dispatch: now exit properly after errors that stop application [#39] 
+* [NEW] tests: helpers/assertions for HTTP testing
+* [FIXED] improve compatibility with PHP 5.3
+* [NEW] url_for support for GET params
+* [NEW] optional HTTP status code parameter to redirect_to (usually you'll want HTTP_SEE_OTHER) 
+* [NEW] before_render user defined filter to transform view before rendering
+* [FIXED] flash_now` and `flash` return null when getting an undefined flash var, not all flash vars. [#38]
+* [NEW] Auto rendering feature
+* [NEW] User defined autoload_controller to customize the loading of controllers
+* [CHANGED] Add $routes variable to before() and after() functions
+* [NEW] Add gzip option
+* [NEW] Improve URLs handling: special characters support and extra GET params with or without url_rewriting.
+* [FIXED] Adding a security option that prevents output in require_once_dir 
+
+
+
+[2009-11-30: VERSION 0.4.6]
+
+* [CHANGED] for IIS/Windows compatibility: file_path() normalizes paths in *nix way, even on windows (backslashes are converted in slashes, double slashes are replaced by one). Refactoring options paths in run() to fix paths on windows.
+* [FIXED] Removes php short open tags in default limonade views to be compatible with php5.3 default configuration (short_open_tags disabled)
+* [FIXED] Big security issue in render_file that allows accessing any files from outside public folder using ../ [#35]
+
+[2009-10-17: VERSION 0.4.5]
+
+* [FIXED] notice that can occurs in render() when a % isn't necessarily a placeholder % caracter. [#32]
+* [FIXED] warning when require_once_dir calls an unknown dir [#31]
+* [FIXED] render_file() Content-type header [#27]
+* [FIXED] count assert_header assertion in tests
+* [NEW] Allow to use hash with url_for / redirect_to [#26]
+
+[2009-09-21: VERSION 0.4.4]
+
+* [FIXED] empty $GLOBALS['_SERVER'] bug with Apache/2.2.3, CentOS/5.2, 
+PHP/5.2.8 [#29]
+* [FIXED] unassigned variables in example01 (sanemat patch) [#33]
+
+[2009-08-07: VERSION 0.4.3]
+
+* [FIXED] fixing the DIRECTORY_SEPARATOR for windows server environments
+* [FIXED] In stop_and_exit(), ob_end_clean() only if request is HEAD [#24]
+* [FIXED] Fix flash bug when redirect_to [#22]
+
+[2009-07-31: VERSION 0.4.2]
+
+* [FIXED] flash features: now works only with html output [#21]
+
+[2009-07-31: VERSION 0.4.1]
+
+* [NEW] support for HEAD requests [#12 state:resolved]
+* [FIXED] internal routes are at the begining of the lib so can't be bypassed [#13 state:resolved]
+* [FIXED] internal CSS we're renderred with a layout if defined [#14]
+* [FIXED] bug in file_is_text
+* [CHANGED] removes mime_content_type compatibility function and add file_mime_content_type() [#15 state:resolved]
+* [NEW] Adding an $exit optional parameter to the stop_and_exit() function
+* [FIXED] Fixing flash bug while redirect_to [#16 state:resolved]
+* [FIXED] Fixing redirect_to bug with multiple parameters [#17]
+* [FIXED] Fixing bug setting an error_layout [#18]
+* [FIXED] buggy url_for()
+* [NEW] url rewriting support by explictly setting option('base_uri')  
+
+[2009-07-18: VERSION 0.4]
+
+* rewrites error notices features: 
+   - php notices/warning errors won't stop application anymore
+   - error notices rendering rewritten
+* removes unused `$user_agent` options in dispatch and route functions.
+* [NEW] support for E_DEPRECATED and E_USER_DEPRECATED errors (PHP 5.3.0 >)
+* [NEW] LIM_DEPRACTED_ERROR (can be called with halt())
+* [CHANGED] rename `redirect` in `redirect_to`; `redirect` is deprecated.
+* [CHANGED] `redirect_to` is based on `url_for` and takes the same arguments
+* [CHANGED] Now `url_for` supports full URLs with a schema 
+* removes `array_to_xml` function: doesn't need to be in the limonade core
+* [NEW] Session option `option('session')`. Can be true, false or a string for session. By default, it take the LIM_SESSION_NAME value, and it starts.
+* [NEW] Flash messages features hepers: `flash()`, `flash_reset()`
+* [CHANGED] Update and adding design to limonade default views (used for errors)
+
+
+[2009-07-01: VERSION 0.3.1]
+
+* [FIXED] lib dir is now loaded after configure()
+* Minor code cleanup
+* [NEW] README file available in english
+* [CHANGED][FIXED] README and LISEZMOI
+
+[2009-04-22: VERSION 0.3]
+
+* first published pre-release

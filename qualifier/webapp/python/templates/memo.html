@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<p id="author">
+{% if memo['is_private'] == 1 %}
+Private
+{% else %}
+Public
+{% endif %}
+Memo by {{ memo['username'] }} ({{ memo['created_at'] }})
+</p>
+
+<hr>
+{% if older %}
+<a id="older" href="{{ url_for('memo', memo_id=older['id'], _external=True) }}">&lt; older memo</a>
+{% endif %}
+|
+{% if newer %}
+<a id="newer" href="{{ url_for('memo', memo_id=newer['id'], _external=True) }}">newer memo &gt;</a>
+{% endif %}
+
+<hr>
+<div id="content_html">
+{% autoescape false %}{{ memo.content_html }}{% endautoescape %}
+</div>
+{% endblock %}
+

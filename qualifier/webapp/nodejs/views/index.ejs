@@ -1,0 +1,12 @@
+<h3>public memos</h3>
+<p id="pager">
+  recent <%= page * 100 + 1 %> - <%= page * 100 + 100 %> / total <span id="total"><%= total %></span>
+</p>
+<ul id="memos">
+<% memos.forEach(function(memo) { %>
+<li>
+  <a href="<%= uri_for('/memo/') %><%= memo.id %>"><%= memo.content.split(/\r?\n/)[0] %></a> by <%= memo.username %> (<%= memo.created_at %>)
+</li>
+<% }); %>
+</ul>
+

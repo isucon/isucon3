@@ -1,0 +1,20 @@
+<form action="<%= url_for('/memo') %>" method="post">
+  <input type="hidden" name="sid" value="<%= session['token'] %>">
+  <textarea name="content"></textarea>
+  <br>
+  <input type="checkbox" name="is_private" value="1"> private
+  <input type="submit" value="post">
+</form>
+
+<h3>my memos</h3>
+
+<ul>
+<% memos.each do |memo| %>
+<li>
+  <a href="<%= url_for('/memo/') %><%= memo['id'] %>"><%= memo['content'].split(/\r?\n/).first %></a> <%= memo['created_at'] %>
+<% if memo['is_private'] == 1 %>
+[private]
+<% end %>
+</li>
+<% end %>
+</ul>

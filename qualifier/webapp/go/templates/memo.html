@@ -1,0 +1,30 @@
+{{ define "memo" }}
+
+{{ template "base_top" . }}
+
+<p id="author">
+{{ if .Memo.IsPrivate }}
+Private
+{{ else }}
+Public
+{{ end }}
+Memo by {{ .Memo.Username }} ({{ .Memo.CreatedAt }})
+</p>
+
+<hr>
+{{ if .Older }}
+<a id="older" href="{{ url_for "/memo/" }}{{ .Older.Id }}">&lt; older memo</a>
+{{ end }}
+|
+{{ if .Newer }}
+<a id="newer" href="{{ url_for "/memo/" }}{{ .Newer.Id }}">newer memo &gt;</a>
+{{ end }}
+
+<hr>
+<div id="content_html">
+{{ gen_markdown .Memo.Content }}
+</div>
+
+{{ template "base_bottom" . }}
+
+{{ end }}

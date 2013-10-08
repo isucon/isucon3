@@ -1,0 +1,11 @@
+<h3>public memos</h3>
+<p id="pager">
+  recent <%= page * 100 + 1 %> - <%= page * 100 + 100 %> / total <span id="total"><%= total %></span>
+</p>
+<ul id="memos">
+<% memos.each do |memo| %>
+<li>
+  <a href="<%= url_for('/memo/') %><%= memo['id'] %>"><%= memo["content"].split(/\r?\n/).first %></a> by <%= memo["username"] %> (<%= memo["created_at"] %>)
+</li>
+<% end %>
+</ul>

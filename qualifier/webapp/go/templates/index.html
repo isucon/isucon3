@@ -1,0 +1,19 @@
+{{define "index"}}
+
+{{ template "base_top" .}}
+
+<h3>public memos</h3>
+<p id="pager">
+  recent {{ .PageStart }} - {{ .PageEnd }} / total <span id="total">{{ .Total }}</span>
+</p>
+<ul id="memos">
+{{ range .Memos }}
+<li>
+  <a href="{{ url_for "/memo/" }}{{ .Id }}">{{ first_line .Content }}</a> by {{ .Username }} ({{ .CreatedAt }})
+</li>
+{{ end }}
+</ul>
+
+{{ template "base_bottom" .}}
+
+{{ end }}

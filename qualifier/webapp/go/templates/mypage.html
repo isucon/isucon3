@@ -1,0 +1,28 @@
+{{ define "mypage" }}
+
+{{ template "base_top" .}}
+
+<form action="{{ url_for "/memo" }}" method="post">
+  <input type="hidden" name="sid" value="{{ get_token .Session }}">
+  <textarea name="content"></textarea>
+  <br>
+  <input type="checkbox" name="is_private" value="1"> private
+  <input type="submit" value="post">
+</form>
+
+<h3>my memos</h3>
+
+<ul>
+{{ range .Memos }}
+<li>
+  <a href="{{ url_for "/memo/" }}{{ .Id }}">{{ first_line .Content }}</a> by {{ .Username }} ({{ .CreatedAt }})
+  {{ if .IsPrivate }}
+  [private]
+  {{ end }}
+</li>
+{{ end }}
+</ul>
+
+{{ template "base_bottom" .}}
+
+{{ end }}

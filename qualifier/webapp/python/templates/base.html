@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8">
+<title>Isucon3</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='/css/bootstrap.min.css', _external=True) }}">
+<style>
+body {
+  padding-top: 60px;
+}
+</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='/css/bootstrap-responsive.min.css', _external=True) }}">
+<link rel="stylesheet" href="{{ url_for('top_page', _external=True) }}">
+</head>
+<body>
+<div class="navbar navbar-fixed-top">
+<div class="navbar-inner">
+<div class="container">
+<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+<span class="icon-bar"></span>
+<span class="icon-bar"></span>
+<span class="icon-bar"></span>
+</a>
+<a class="brand" href="/">Isucon3</a>
+<div class="nav-collapse">
+<ul class="nav">
+<li><a href="{{ url_for('top_page', _external=True) }}">Home</a></li>
+{% if user %}
+<li><a href="{{ url_for('mypage', _external=True) }}">MyPage</a></li>
+<li>
+  <form action="/signout" method="post">
+    <input type="hidden" name="sid" value="{{ session.get('token') }}">
+    <input type="submit" value="SignOut">
+  </form>
+</li>
+{% else %}
+<li><a href="{{ url_for('signin', _external=True) }}">SignIn</a></li>
+{% endif %}
+</ul>
+</div> <!--/.nav-collapse -->
+</div>
+</div>
+</div>
+
+<div class="container">
+<h2>Hello {{ user.username }}!</h2>
+
+{% block content %}{% endblock %}
+
+</div> <!-- /container -->
+
+<script type="text/javascript" src="{{ url_for('static', filename='/js/jquery.min.js', _external=True) }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='/js/bootstrap.min.js', _external=True) }}"></script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{{ define "signin" }}
+
+{{ template "base_top" . }}
+
+<form action="{{ url_for "/signin" }}" method="post">
+username <input type="text" name="username" size="20">
+<br>
+password <input type="password" name="password" size="20">
+<br>
+<input type="submit" value="signin">
+</form>
+
+{{ template "base_bottom" . }}
+
+{{ end }}

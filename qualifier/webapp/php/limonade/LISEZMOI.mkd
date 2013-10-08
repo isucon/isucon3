@@ -1,0 +1,726 @@
+# Limonade: LISEZMOI
+
+> **Cette documentation a été mise à jour en janvier 2012 par [Thomas Ingles](https://github.com/sudwebdesign) mais n'est pas maintenue officiellement.** 
+> **La documentation de référence à consulter reste [README](https://github.com/sofadesign/limonade/blob/master/README.mkd)**
+
+
+Limonade est un micro framework PHP qui permet le prototypage et le développement rapide d'applications web.
+
+Prenant son inspiration de frameworks tels que [Sinatra](http://www.sinatrarb.com/) ou [Camping](http://github.com/camping/camping) en Ruby, ou encore  [Orbit](http://orbit.luaforge.net/) en Lua, il se veut simple, léger et d'un usage extrêmement souple.
+
+Limonade met en oeuvre un ensemble de fonctions complémentaires à l'API de base de PHP, en cohérence avec celle-ci, tout en se reposant au maximum sur ses fonctions natives. 
+
+Les fonctions mises à disposition par Limonade sont assimilables extrêmement rapidement, et fournissent tout ce qu'on est en droit d'attendre d'un framework moderne ( MVC, REST, ...).
+
+
+    require_once 'lib/limonade.php';
+    dispatch('/', 'hello');
+        function hello()
+        {
+            return 'Hello world!';
+        }
+    run();
+
+## A propos de ce document ##
+
+Ce document fournit un aperçu rapide mais complet des fonctionnalités  de Limonade.
+
+Pour plus d'informations, vous pouvez également consulter le [site](http://limonade.sofa-design/), 
+la [documentation de l'API publique ](http://limonade.sofa-design.net/api/),les [exemples](http://limonade.sofa-design.net/examples.htm) et bien sûr le [code source](http://github.com/sofadesign/limonade/blob/master/lib/limonade.php) de Limonade, qui reste encore sa meilleure documentation.
+
+Un [groupe de discussion](http://groups.google.fr/group/limonade) est également à disposition pour plus d'échanges.
+
+## Requirements ##
+
+* PHP 5.1.6 > (successfully tested with PHP 5.1.6 but it might work with older versions)
+   
+## Routes ##
+
+Routes combine 
+
+* Une méthode HTTP
+* Avec un format d'URL correspondant
+* Et un paramètre de rappel
+
+Dans Limonade, les routes associent une méthode HTTP et un masque de recherche d'URL à une fonction.
+
+    dispatch('/', 'my_get_function');
+    # identique à dispatch_get('my_get_function');
+        function my_get_function()
+        {
+            // Show something
+            // with the code of this callback controller
+        }
+    
+    dispatch_post('/', 'my_post_function'); 
+        function my_post_function()
+        {
+            // Create something
+        }
+        
+    dispatch_put('/', 'my_update_function'); 
+        function my_update_function()
+        {
+            // Update something
+        }
+        
+    dispatch_delete('/', 'my_delete_function'); 
+        function my_delete_function()
+        {
+            // Delete something
+        }
+        
+Les routes sont testées dans l'ordre dans lequel elle sont déclarées. Le chemin auquel les routes sont comparées peut être passé de plusieurs manière via l'url:
+
+    http://localhost/my_app/?u=/my/path
+    http://localhost/my_app/?uri=/my/path
+    http://localhost/my_app/index.php?/my/path
+    http://localhost/my_app/?/my/path
+
+Quand les méthodes `PUT` ou `DELETE` ne sont pas supportés (comme dans le cas d'une soumission de fomulaire HTML), on utilise le paramètre `_method` dans une requête `POST`: sa valeur surchargera la méthode `POST`.
+
+        <form action="<?=url_for('profile_update')?>" method="post">
+            <p><input type="hidden" name="_method" value="PUT" id="_method"></p>
+            <p>... your form fields</p>
+            <p><input type="submit" value="Update"></p>
+        </form>
+
+Les masque peuvent contenir des paramètres nommés, dont la valeur seront ensuite accessible via la fonction `params()`
+
+    dispatch('/hello/:name', 'hello');
+        function  hello()
+        {
+            $name = params('name');
+            return 'Hello $name';
+        }
+
+Les masques peuvent également contenir des caractères joker. Les valeur correspondante seront accessibles via des index qui suivent leur ordre dans le masque.
+
+    dispatch('/writing/*/to/*', 'my_letter');
+        function my_letter()
+        {
+            # Matches /writing/an_email/to/joe
+            $type = params(0); # "an_email"
+            $name = params(1); # "joe"
+            # ...
+        }
+        
+    dispatch('/files/*.*', 'share_files');
+        function share_files()
+        {
+            # matches /files/readme.txt
+            $ext = params(1);
+            $filename = params(0).".".$ext;
+            # ...
+        }
+        
+Contrairement au caractère joker simple `*`, le double caractère joker `**` permet de spécifier une chaîne de caractères qui peut comporter un `/`
+
+    dispatch('/files/**', 'share_files')
+        function share_files()
+        {
+            # Matches /files/my/own/file.txt
+            $filename = params(0); # my/own/file.txt
+        }
+
+Le masque peut également être une expression régulière s'il commence par `^`
+
+    dispatch('^/my/own/(\d+)/regexp', 'my_func');
+        function my_func()
+        {
+            # matches /my/own/12/regexp
+            $num = params(0);
+        }
+        
+On peut également nommer les paramètres joker et les captures d'expression régulière en passant un tableau contenant les noms désirés.
+
+    dispatch(array('/say/*/to/**', array("what", "name")), 'my_func');
+        function my_func()
+        {
+            # Matches /say/hello/to/joe
+            $what = params('what');
+            $name = params('name');
+        }
+
+Vous pouvez également fournir les valeurs des paramètres par défaut qui sont fusionnées avec et surchargée par les paramètres du motif.
+
+    $options = array('params' => array('firstname'=>'bob'));
+    dispatch('/hello/:name', 'hello', $options);
+        function hello($firstname, $name) # default parameters first
+        {
+            return 'Hello $firstname $name';
+        }
+
+
+### Callback controllers ###
+
+Le rappel peut être une fonction, une méthode d'objet, une méthode statique ou une fermeture.
+Voir [php documentation](http://php.net/manual/en/language.pseudo-types.php#language.types.callback) to learn more about the callback pseudo-type.
+
+    # will call my_hello_function() function
+    dispatch('/hello', 'my_hello_function');
+
+    # Static class method call, MyClass::hello();
+    dispatch('/hello', array('MyClass', 'hello'));
+
+    # Object method call, $obj->hello();
+    dispatch('/hello', array($obj, 'hello'));
+
+    # Static class method call (As of PHP 5.2.3), MyClass::hello();
+    dispatch('/hello', 'MyClass::hello');
+
+    # Using lambda function (As of PHP 5.3.0)
+    dispatch('/hello', function(){
+      return 'Hello World!';
+    });
+
+Contrôleurs de rappel retourne le résultat vue rendue (voir _Views et templates_).
+
+Ils peuvent prendre les paramètres pattern comme arguments
+
+    dispatch('/hello/:firstname/:name', 'hello');
+        function hello($firstname, $name)
+        {
+            # $firstname parameter equals params('firstname');
+            # and $name parameter equals params('name');
+            return 'Hello $firstname $name';
+        }
+  
+
+Les fonctions appelées par les routes peuvent être écrites n'importe où avant l'éxécution de la fonction `run()`. Elles peuvent également être regroupées dans des fichiers controlleurs rangés dans un dossier `controllers/`.
+
+    /                   # site root
+     - index.php        # file with routes declarations and run()
+     + controllers/
+         - blog.php     # functions for blog: blog_index(), blog_show(),
+                        #  blog_post()...
+         - comments.php # comments_for_a_post(), comment_add()...
+
+
+
+L'emplacement de ce dossier est modifiable grâce à l'option `controllers_dir`
+
+    option('controllers_dir', dirname(__FILE__).'/other/dir/for/controllers');
+    
+
+Vous pouvez également définir `autoload_controller` fonction de chargement de vos contrôleurs:
+    function autoload_controller($callback) 
+    { 
+       # If $callback, the callback function defined in matching route, 
+       # begins with 'admin_', then we load controllers from
+       # the admin sub-directory in the controllers directory.
+       # Else we load controllers the normal way from 'controllers_dir'.
+       
+       $path = option('controllers_dir'); 
+       if(strpos($callback, "admin_") === 0) $path = file_path($path, 'admin'); 
+       require_once_dir($path); 
+    }
+
+### Url rewriting ###
+
+Limonade supporte l'url rewriting depuis sa version 0.4.1
+
+Avec un fichier `.htaccess` dans le dossier racine de votre application:
+
+    <IfModule mod_rewrite.c>
+      Options +FollowSymlinks
+      Options +Indexes
+      RewriteEngine on
+      # Si votre application est dans un sous-dossier
+      RewriteBase /my_app/ 
+
+      # test string is a valid files
+      RewriteCond %{SCRIPT_FILENAME} !-f
+      # test string is a valid directory
+      RewriteCond %{SCRIPT_FILENAME} !-d
+
+	#OLD
+#   #RewriteRule ^(.*)$   index.php?/$1    [NC,L]
+
+      RewriteRule ^(.*)$   index.php?uri=/$1    [NC,L,QSA]
+      # with QSA flag (query string append),
+      # forces the rewrite engine to append a query string part of the
+      # substitution string to the existing string, instead of replacing it.
+#Avec drapeau QSA (la chaîne de requête annexé),
+#forces le moteur de réécriture d'annexer une partie de la chaîne de requête de
+#substitution à la chaîne existante, au lieu de le remplacer.
+    </IfModule>
+
+Et en renseignant explicitement `option('base_uri')` dans votre fonction configure():
+
+    option('base_uri', '/my_app'); # '/' ou identique à la valeur RewriteBase de votre .htaccess
+
+Vous apouvez accéder à votre site avec des urls de type `http://your.new-website.com/my/limonade/path` au lieu de `http://your.new-website.com/?/my/limonade/path`.
+
+
+## Vues et templates ##
+
+
+Les fichiers templates sont stockés par défaut dans le dossier `views/`.  
+L'emplacement de ce dossier est modifiable grâce à l'option `views_dir`
+
+    option('views_dir', dirname(__FILE__).'/other/dir/for/views');
+
+Pour passer des variables au templates, on utilise la fonction `set()`
+
+    set('name', 'John Doe');
+    render('index.html.php');
+    
+On peut également passer des variables directement au template:
+
+    render('index.html.php', null, array('name' => 'John Doe' ));
+    
+La méthode `set_or_default` permet de passer une variable, et si elle est vide, une valeur par défaut. Elle se révèle particulièrement utile pour l'assignation de paramètres optionnels extrait de l'url avec la fonction `params()`.
+
+    dispatch('/hello/:name', 'hello');
+        function  hello()
+        {
+            # matching /hello/
+            set_or_default('name', params('name'),'John');
+            return render('Hello %s!'); // returns 'Hello John!' because params('name') was empty. Else it would have returned params('name') value.
+        }
+    
+Comme vous pouvez le remarquer, la sortie finale est retourné par votre contrôleur. Alors n'oubliez pas de retourner votre vue explicitement dans votre contrôleur avec le mot-clé `return`! * (Cette remarque sera particulièrement utile pour rubyistes;-)) *    
+
+    
+
+### Layouts ###
+
+Les templates peuvent être rendus à l'intérieur d'un autre template appelé layout.
+
+Ce layout est spécifié par la fonction `layout`
+
+    layout('default_layout.php');
+    
+ou directement via la fonction de rendu des templates
+
+    render('index.html.php', 'default_layout.php');
+    
+Si la valeur du layout est `null`, le template sera rendu sans layout
+
+    render('index.html.php', null);
+
+### Chaînes formatées et templates en ligne ###
+
+Les chaînes formatées à la manière de [`sprintf`](http://php.net/manual/function.sprintf.php) sont autorisées:
+
+    set('num', 5);
+    set('where', 'tree');
+    return render('There are %d monkeys in the %s') // returns 'There are 5 monkeys in the tree'
+
+Il est également possible de faire appel à une fonction pour template. On peut ainsi inclure les templates dans un même fichier afin de produire, par exemple, une application dans un fichier unique.
+
+    function html_message($vars){ extract($vars);?>
+        <h1>Title: <?php echo h($title); ?></h1>
+        <p>Message:<br>
+           <?php echo h($msg); ?></p>
+    <?}
+    
+    // in a request handling function
+    set('title', 'Hello!');
+    set('msg', 'There are 100 monkeys in the Chennai and bangalore');
+    render('html_message');
+
+### Templates HTML ###
+
+La fonction `html` permet de rendre un template de la même manière que `render`. Une en-tête HTTP précise le `Content-type` adéquat (`text/html`) et l'encodage défini dans les options (utf8 par défaut).
+
+    html('my_template.html.php');
+
+### Templates XML ###
+
+La fonction `xml` permet de rendre un template de la même manière que `render`. Une en-tête HTTP précise le `Content-type` adéquat (`text/xml`) et l'encodage défini dans les options (utf8 par défaut).
+
+### Templates CSS ###
+
+La fonction `css` permet de rendre un template de la même manière que `render`. Une en-tête HTTP précise le `Content-type` adéquat (`text/css`) et l'encodage défini dans les options (utf8 par défaut).
+
+    css('screen.css.php');
+
+### Templates JS ###
+
+La fonction `js` permet de rendre un template de la même manière que `render`. Une en-tête HTTP précise le `Content-type` adéquat (`application/javascript`) et l'encodage défini dans les options (utf8 par défaut).
+
+    js('app.js.php');
+
+### Templates TXT ###
+
+La fonction `txt` permet de rendre un template de la même manière que `render`. Une en-tête HTTP précise le `Content-type` adéquat (`text/plain`) et l'encodage défini dans les options (utf8 par défaut).
+
+    txt('index.txt.php');
+    
+### Templates JSON ###
+
+Comme la fonction [`json_encode`](http://php.net/manual/function.json-encode.php), retourne la réprésentation json d'une valeur. Une en-tête HTTP précise le `Content-type` adéquat (`application/x-javascript`) et l'encodage défini dans les options (utf8 par défaut).
+
+    json($my_data);
+
+### Servir des fichiers ###
+
+La fonction `render_file` permet de rendre un fichier directement dans le tampon de sortie. 
+    
+    render_file(option('public_dir').'foo.jpg');
+
+Une en-tête HTTP précise le `Content-type` adéquat en fonction de l'extension du fichier et l'encodage défini dans les options (utf8 par défaut) pour les fichiers textes.
+
+La sortie est temporisée afin de prendre en charge aisément des fichiers de grande taille.
+
+### Partials ###
+
+La fonction `partielle` est un raccourci pour rendre sans mise en page. Utiles pour la gestion des blocs réutilisables et de les garder dans des fichiers séparés.
+
+Ce code
+
+    partial('my_posts.php', array('posts'=>$posts));
+    
+est le même que
+
+    render('my_posts.php', null, array('posts'=>$posts));
+
+### Captures ###
+[TODO] `content_for($name); endcontent();`
+La fonction `content_for` vous permet de capturer un bloc de texte dans une vue. Puis le bloc capturé sera disponible pour la mise en page. Ceci est utile pour la gestion des zones de présentation comme une barre latérale ou de définir des fichiers JavaScript ou feuille de style qui sont spécifiques à une vue.
+## Avant et après la requête ##
+
+For example with this layout:
+
+    <div id="content">
+      <div id="main">
+        <?php echo $content; ?>
+      </div>
+      <div id="side">
+        <?php if (isset($side)) echo $side; ?>
+      </div>
+    </div>
+    
+And in your view:
+
+    <p>My main content</p>
+    
+    <?php content_for('side'); ?>
+    <ul>
+      <li><a href="<?php echo url_for('/pages/item1')?>">Item 1</a></li>
+      <li><a href="<?php echo url_for('/pages/item2')?>">Item 2</a></li>
+    </ul>
+    <?php end_content_for(); ?>
+
+Rendered result is:
+
+    <div id="content">
+      <div id="main">
+        <p>My main content</p>
+      </div>
+      <div id="side">
+        <ul>
+          <li><a href="?/pages/item1">Item 1</a></li>
+          <li><a href="?/pages/item1">Item 2</a></li>
+        </ul>
+      </div>
+    </div>
+
+
+L'exemple ci-dessus est détaillé dans [ce tutoriel] (http://blog.limonade-php.net/post/438674987/how-to-use-content-for-and-partial).
+
+Utilisez capture avec les partiels, il va vous aider à organiser vos idées et vous éviter d'avoir à copier / coller le même code plusieurs fois.
+
+## Hooks and filters ##
+
+Limonade permet à l'utilisateur de définir certaines fonctions afin d'améliorer le comportement de Limonade avec ses propres besoins.
+
+Certains comme le hook `before` et le filtre `after` sont couramment utilisés, d'autres sont uniquement pour une utilisation avancée qui nécessite une bonne compréhension du fonctionnement interne de Limonade.
+
+
+### Before ###
+
+Vous pouvez définir une fonction `before` qui sera executée avant chaque requête. Cela s'avère très utile pour définir un layout par défaut ou des variables à passer aux templates
+
+    function before($route)
+    {
+        layout('default_layout.php');
+        set('site_title', 'My Website');
+    }
+
+
+La route courrante trouvé est également passé avant la fonction, vous pouvez donc tester. C'est un tableau retourné par la fonction interne `route_find`, avec ces valeurs:
+
+* `method` (HTTP method)
+* `pattern` (regexp pattern)
+* `names` (params names)
+* `callback` (callback)
+* `options` (route options)
+* `params` (current params)
+
+### After ###
+
+Un filtre de sortie `after` est également disponible. Il est exécuté après chaque requête et permet d'appliquer une transformation à la sortie (sauf pour les sorties `render_file` qui sont envoyées directement au tampon de sortie).
+
+    function after($output){
+      $config = array('indent' => TRUE,
+                      'output-xhtml' => TRUE,
+                      'wrap' => 200);
+      
+      $encoding = strtoupper(str_replace('-','', option('encoding')));
+      $tidy = tidy_parse_string($output, $config, $encoding);
+      $tidy->cleanRepair();
+      return $tidy;
+    }
+    
+The current executed route is also available for `after` function.
+
+### Before render ###
+
+Vous pouvez définir une fonction `before_render` qui filtrera votre vue avant de l'afficher.
+
+Les trois premiers paramètres sont les mêmes que ceux passés à la fonction `render` :
+
+* `$content_or_func`: the view string
+* `$layout`: tracé du chemin actuel (current layout path)
+* `$locals`: variables passés directement à la function `render`
+
+Last parameter, `$view_path` is by default `file_path(option('views_dir'), $content_or_func);`
+
+    function before_render($content_or_func, $layout, $locals, $view_path)
+    {
+      # Transform $content_or_func, $layout, $locals or $view_path.
+      # Then return there new values
+      return array($content_or_func, $layout, $locals, $view_path);
+    }
+
+### Autorender ###
+
+Vous pouvez définir vos propres fonctions `autorender` pour effectuer automatiquement le rendu selon l' actuel itinéraire correspondant. Il sera exécuté si votre contrôleur renvoie une sortie nulle.
+
+    dispatch('/', 'hello');
+    function hello()
+    {
+        # process some stuff...
+        set('name', 'Bob');
+        
+        # but don't return anything
+        # ( like if you were ending this function with return null; )
+    }
+    
+    function autorender($route)
+    {
+        $view = $route['callback'] . ".html.php";
+        return html($view);
+    }
+    
+Dans cet exemple, lorsque est appelé l'url `/`, `hello()` est exécuté, puis `autorender()` donne la view correspondante `hello.html.php`.
+
+### Before exit ###
+
+Si vous définissez un `before_exit`, il est appelé au début du processus d'arrêt / sortie (la fonction `stop_and_exit` est appelée automatiquement lors de la fin de l'application Limonade).
+
+    function before_exit($exit)
+    {
+        # $exit is the same parameter as the one passed to `stop_and_exit`.
+        # If it's false, the exit process will not be executed, 
+        # only the stop instructions
+        # by default it is true
+    }
+
+### Before sending a header ###
+
+Vous pouvez définir une fonction `before_sending_header` fonction qui sera appelée avant que Limonade émete un appel à header(). De cette façon, vous pouvez ajouter en-têtes supplémentaires:
+
+    dispatch('/style.css', 'css');
+    function css()
+    {
+        # Generate css file and output
+        return css('style.css.php');
+    }
+
+    function before_sending_header($header)
+    {
+        if (strpos($header, 'text/css') !== false)
+        {
+            # intercept text/css content-type and add caching to the headers
+            send_header("Cache-Control: max-age=600, public");
+        }
+    }
+
+__Attention__: Prenez soin de ne pas provoquer une boucle en appelant à plusieurs reprises `send_header()` venant de la fonction `before_sending_header()`!
+
+
+## Configuration ##
+
+Vous pouvez définir une fonction `configure` qui sera exécutée au début de l'application (au début de l'exécution de `run()`).
+Vous pouvez notamment y définir les différentes options, une connexion à une base de donnée...
+
+    function configure()
+    {
+        $env = $_SERVER['HTTP_HOST'] == "localhost" ? ENV_DEVELOPMENT : ENV_PRODUCTION;
+        option('env', $env);
+        if(option('env') > ENV_PRODUCTION)
+    	{
+    		options('dsn', 'sqlite:db/development.db'));
+    	}
+    	else
+    	{
+    	    options('dsn', 'sqlite:db/production.db'));
+    	}
+        $GLOBALS['my_db_connexion'] = new PDO(option('dsn'));
+    }
+    
+L'ensemble des fichiers PHP contenus dans le dossier défini par `option('lib_dir')` (`lib/` par défaut) sont chargés avec [`require_once`](http://php.net/manual/function.require-once.php) juste avant l'exécution de la méthode `configure`. Vous pouvez ainsi placer vos propres fonction et bibliothèques dans ce dossier afin qu'ils soit chargés et disponibles au démarrage de l'application.
+
+## Options ##
+
+La fonction `option` permet de définir et d'accéder aux options de l'application
+
+    option('env', ENV_PRODUCTION);
+    option('env'); // return ENV_PRODUCTION value
+    
+Si le nom de l'option n'est pas précisé, retourne un tableau de toutes les options définies.
+
+Vous pouvez l'utiliser pour gérer les options propres à Limonade mais aussi des options personnalisées pour votre application.
+
+Les options utilisées par Limonade ont par défaut les valeurs suivantes:
+
+    option('root_dir',        $root_dir); // le dossier qui contient le fichier de lancement de l'application
+    option('base_path',          $base_path);
+    option('base_uri',           $base_uri); // à spécifier si vous utiliser l'url rewriting.
+    option('limonade_dir',       dirname(__FILE__).'/'); // dossier contenant le fichier principal limonade.php
+    option('limonade_views_dir', dirname(__FILE__).'/limonade/views/');
+    option('limonade_public_dir',dirname(__FILE__).'/limonade/public/');
+    option('public_dir',         $root_dir.'/public/');
+    option('views_dir',          $root_dir.'/views/');
+    option('controllers_dir',    $root_dir.'/controllers/');
+    option('lib_dir',            $root_dir.'/lib/');
+    option('error_views_dir',    option('limonade_views_dir'));
+    option('env',                ENV_PRODUCTION);
+    option('debug',              true);
+    option('session',            LIM_SESSION_NAME); // true, false or the name of your session
+    option('encoding',           'utf-8');
+    option('x-sendfile',         0); // 0: disabled, 
+                                     // X-SENDFILE: for Apache and Lighttpd v. >= 1.5,
+                                     // X-LIGHTTPD-SEND-FILE: for Apache and Lighttpd v. < 1.5
+
+## Sessions ##
+
+Une session démarre automatiquement par défaut. Vous puvez ensuite accéder aux variable des session comme d'habitude avec le tableau `$_SESSION`.
+
+Vous pouvez désactiver les sessions avec l'option `session`
+
+⌘ [voir un exemple de code](http://gist.github.com/159327)
+
+### Flash ###
+
+Flash est une fonctionnalit particulière des sessions. Une valeur flash sera disponible pour la preochaine requête puis effacée. Cette fonctionnalité est particulièrement utile pour l'affiche des erreurs de retours après la soumission d'un formulaire ou pour notifier l'utilisateur du bon déroulement d'une action.
+
+* `flash($name, $value...)` définit une valeur flash pour la prochaine requête
+* dans les vues HTML, vous pouvez accéder aux valeurs flash disponible grâce au tableau `$flash` ou à la fonction `flash_now($name)`.
+
+⌘ [voir un exemple de code](http://gist.github.com/162680)
+
+## Helpers ##
+
+Consultez le code source et l'API pour de plus amples informations sur les helpers disponibles.
+
+### url_for ###
+
+Utilisez la fonction `url_for` afin de créer automatiquement des urls bien formées quel que soit le dossier dans lequel est installée votre application sur le serveur web.
+
+    # with option('base_uri', '?')
+    url_for('one', 'two', 'three'); # returns ?/one/two/three
+    url_for('one', 'two', array('page' => 1)); # returns ?/one/two&amp;page=2
+    
+
+Si vous utilisez l'url rewriting, vous devez spécifier explicitement l'option `base_uri` (par défaut `/chemin_de_mon_appli/?`).
+
+
+## Gestion des erreurs ##
+
+### Halt ###
+
+Vous pouvez interrompre l'execution de l'application avec la fonction `halt`
+Les erreurs seront prises en charge par les gestionnaires d'erreur par défaut de Limonade ou par ceux que vous aurez définis.
+
+    halt(NOT_FOUND);
+    halt("En error occured in my app...");
+
+### Not Found ###
+
+Par défaut, renvoie sur le gestionnaire d'erreur `not_found` et envoie un _`404 NOT FOUND`_ dans les en-têtes HTTP. 
+
+    halt(NOT_FOUND);
+    halt(NOT_FOUND, "This product doesn't exists.");
+    
+Pour définir un nouvel affichage de ce erreurs, il suffit de déclarer une fonction `not_found`
+
+    function not_found($errno, $errstr, $errfile=null, $errline=null)
+    {
+        set('errno', $errno);
+        set('errstr', $errstr);
+        set('errfile', $errfile);
+        set('errline', $errline);
+        return html("show_not_found_errors.html.php");
+    }
+    
+### Server Error ###
+
+Par défaut, renvoie sur le gestionnaire d'erreur `server_error` et envoie un _`500 INTERNAL SERVER ERROR`_ dans les en-têtes HTTP.
+
+    halt();
+    halt('Breaking bad!');
+    halt(SERVER_ERROR, "Not good...");
+    trigger_error("Wrong parameter", E_USER_ERROR);
+    
+Les erreurs php sont également capturées et envoyées à ce gestionnaire d'erreur.
+
+Pour définir un nouvel affichage de ce erreurs, il suffit de déclarer une fonction `server_error`
+
+    function server_error($errno, $errstr, $errfile=null, $errline=null)
+    {
+        $args = compact('errno', 'errstr', 'errfile', 'errline');	
+        return html("show_server_errors.html.php", error_layout(), $args);
+    }
+
+### Error layout ###
+
+Permet de définir et d'accéder à un layout dédié à l'affichage d'erreurs
+
+    error_layout('error_layout.php');
+    error_layout(); // return 'error_layout.php'
+
+### Capture des erreurs ###
+
+En plus de la personnalisation de l'affichage des erreurs courantes `NOT_FOUND` et `SERVER_ERROR`, limonade permet de rediriger de manière précise les erreurs vers vos propres fonctions.
+
+    error(E_USER_WARNING, 'my_notices')
+        function my_notices($errno, $errstr, $errfile, $errline)
+        {
+            // storing php warnings in a log file
+            // ...
+            status(SERVER_ERROR);
+            return html('<h1>Server Error</h1>');
+        }
+        
+La constante `E_LIM_HTTP` désigne toutes les erreurs HTTP
+
+    error(E_LIM_HTTP, 'my_http_errors')
+        function my_http_errors($errno, $errstr, $errfile, $errline)
+        {
+            status($errno);
+            return html('<h1>'.http_response_status_code($errno).'</h1>');
+        }
+    
+La constante `E_LIM_PHP` désigne toutes les erreurs PHP (renvoyé par PHP ou via [`trigger_error`](http://php.net/manual/function.trigger-error.php)).
+
+## Testing ##
+
+[TODO]
+
+## More ##
+
+* [Limonade web site](http://www.limonade-php.net/)
+* [Limonade blog](http://blog.limonade-php.net/)
+* [Issue tracking / release planning](http://sofadesign.lighthouseapp.com/projects/29612-limonade/overview)
+* [Support / Discussions](http://groups.google.fr/group/limonade)
+
+
+
+
+
+

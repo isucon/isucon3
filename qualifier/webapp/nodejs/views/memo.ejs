@@ -1,0 +1,23 @@
+<p id="author">
+<% if (memo.is_private) { %>
+Private
+<% } else { %>
+Public
+<% } %>
+Memo by <%= memo.username %> (<%= memo.created_at %>)
+</p>
+
+<hr>
+<% if (older) { %>
+<a id="older" href="<%= uri_for('/memo/') %><%= older.id %>">&lt; older memo</a>
+<% } %>
+|
+<% if (newer) { %>
+<a id="newer" href="<%= uri_for('/memo/') %><%= newer.id %>">newer memo &gt;</a>
+<% } %>
+
+<hr>
+<div id="content_html">
+<%- memo.content_html %>
+</div>
+

@@ -1,0 +1,9 @@
+{
+  "database": {
+    "dbname": "isucon",
+    "host": "localhost",
+    "port": 3306,
+    "username": "isucon",
+    "password": ""
+  }
+}
