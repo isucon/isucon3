@@ -13,8 +13,8 @@ git "/home/isucon/isucon3" do
   group "isucon"
 end
 
-link "/home/isucon/isucon3/final/webapp" do
-  to "/home/isucon/webapp"
+link "/home/isucon/webapp" do
+  to "/home/isucon/isucon3/final/webapp"
   owner "isucon"
   group "isucon"
 end
