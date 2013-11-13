@@ -6,6 +6,7 @@
 #
 
 package "wget"
+package "unzip"
 
 git "/home/isucon/isucon3" do
   repository "https://github.com/kayac/isucon3.git"
