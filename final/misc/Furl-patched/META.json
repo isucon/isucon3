@@ -1,0 +1,132 @@
+{
+   "abstract" : "Lightning-fast URL fetcher",
+   "author" : [
+      "Tokuhiro Matsuno <tokuhirom@gmail.com>"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Minilla/v0.6.3, CPAN::Meta::Converter version 2.131560",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Furl",
+   "no_index" : {
+      "directory" : [
+         "t",
+         "xt",
+         "inc",
+         "share",
+         "eg",
+         "examples",
+         "author"
+      ]
+   },
+   "prereqs" : {
+      "configure" : {
+         "requires" : {
+            "CPAN::Meta" : "0",
+            "CPAN::Meta::Prereqs" : "0",
+            "Module::Build" : "0.38"
+         }
+      },
+      "develop" : {
+         "requires" : {
+            "Test::CPAN::Meta" : "0",
+            "Test::MinimumVersion" : "0.10108",
+            "Test::Pod" : "1.41",
+            "Test::Spellunker" : "v0.2.7"
+         },
+         "suggests" : {
+            "Child" : "0",
+            "Getopt::Long" : "0",
+            "HTTP::Lite" : "0",
+            "LWP::UserAgent" : "0",
+            "Plack::Loader" : "0",
+            "Starman" : "0",
+            "Test::More" : "0",
+            "Test::TCP" : "0",
+            "Test::suggests" : "0",
+            "URI" : "0",
+            "WWW::Curl::Easy" : "4.14",
+            "autodie" : "0",
+            "parent" : "0"
+         }
+      },
+      "runtime" : {
+         "recommends" : {
+            "Compress::Raw::Zlib" : "0",
+            "IO::Socket::SSL" : "0",
+            "Net::IDN::Encode" : "0"
+         },
+         "requires" : {
+            "Class::Accessor::Lite" : "0",
+            "Encode" : "0",
+            "HTTP::Parser::XS" : "0.11",
+            "MIME::Base64" : "0",
+            "Mozilla::CA" : "0",
+            "Scalar::Util" : "0",
+            "Socket" : "0",
+            "Time::HiRes" : "0",
+            "perl" : "5.008001"
+         },
+         "suggests" : {
+            "HTTP::Headers" : "0",
+            "HTTP::Request" : "0",
+            "HTTP::Response" : "0"
+         }
+      },
+      "test" : {
+         "requires" : {
+            "File::Temp" : "0",
+            "Test::More" : "0.96",
+            "Test::Requires" : "0",
+            "Test::TCP" : "1.06"
+         },
+         "suggests" : {
+            "HTTP::Proxy" : "0",
+            "HTTP::Server::PSGI" : "0",
+            "Plack" : "0",
+            "Plack::Loader" : "0",
+            "Plack::Request" : "0",
+            "Starlet::Server" : "0",
+            "Test::Fake::HTTPD" : "0",
+            "Test::SharedFork" : "0",
+            "Test::Valgrind" : "0",
+            "URI" : "0",
+            "parent" : "0"
+         }
+      }
+   },
+   "release_status" : "unstable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/tokuhirom/Furl/issues"
+      },
+      "homepage" : "https://github.com/tokuhirom/Furl",
+      "repository" : {
+         "type" : "git",
+         "url" : "git://github.com/tokuhirom/Furl.git",
+         "web" : "https://github.com/tokuhirom/Furl"
+      }
+   },
+   "version" : "2.19",
+   "x_contributors" : [
+      "Keiji, Yoshimi <walf443@gmail.com>",
+      "Fuji, Goro <gfuji@cpan.org>",
+      "lestrrat <lestrrat+github@gmail.com>",
+      "Audrey Tang <audreyt@audreyt.org>",
+      "mattn <mattn.jp@gmail.com>",
+      "Fuji Goro <fuji.goro@dena.jp>",
+      "bayashi <bayashi@cpan.org>",
+      "Kazuho Oku <kazuhooku@gmail.com>",
+      "Fuji, Goro <g.psy.va@gmail.com>",
+      "s-aska <s.aska.org@gmail.com>",
+      "ikasam_a <masaki.nakagawa@gmail.com>",
+      "xaicron <xaicron@gmail.com>",
+      "Syohei YOSHIDA <syohex@gmail.com>",
+      "Masahiro Nagano <kazeburo@gmail.com>"
+   ]
+}

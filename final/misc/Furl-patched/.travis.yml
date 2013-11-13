@@ -1,0 +1,7 @@
+language: perl
+before_install:
+  - perlbrew -f install-cpanm
+  - 'cpanm App::mymeta_requires'
+  - "mymeta-requires --test --recommends | cpanm"
+perl:
+  - "5.14"
