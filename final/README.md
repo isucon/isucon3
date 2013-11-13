@@ -1,6 +1,6 @@
 ## ISUCON3 Final setup howto
 
-### setup system by chef (for CentOS-6 x86_64)
+### setup system by chef (for CentOS-6 x86_64 only)
 
     # cd chef
     # ./setup-chef.sh
