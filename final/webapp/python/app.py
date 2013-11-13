@@ -194,6 +194,7 @@ def icon_post():
     dir  = config['data_dir']
     with tempfile.NamedTemporaryFile() as temp:
         temp.write(upload.stream.read())
+        temp.flush()
         file = crop_square(temp.name, 'png')
     shutil.move(file, '%s/icon/%s.png' % (dir, icon)) or abort(500)
 
