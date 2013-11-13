@@ -23,7 +23,7 @@ command=/etc/env.sh carton exec -- plackup -s Starlet --port 5000 -E production 
 user=isucon
 stdout_logfile=/tmp/isucon.perl.log
 stderr_logfile=/tmp/isucon.perl.log
-autostart=<%= (node[:hostname] =~ /1$/) ? "true" : "false" %>
+autostart=true
 
 [program:isucon_ruby]
 directory=/home/isucon/webapp/ruby
