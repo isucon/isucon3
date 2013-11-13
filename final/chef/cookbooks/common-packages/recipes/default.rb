@@ -6,6 +6,7 @@
 #
 # 
 #
+package "yum-utils"
 
 remote_file "/tmp/epel-release-6-8.noarch.rpm" do
   source "http://ftp.riken.jp/Linux/fedora/epel/6/i386/epel-release-6-8.noarch.rpm"
