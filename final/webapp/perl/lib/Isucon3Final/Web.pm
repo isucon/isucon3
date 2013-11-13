@@ -294,7 +294,7 @@ get '/image/:image' => [qw/ get_user /] => sub {
     }
     elsif ( $entry->{publish_level} == 1 ) {
         # publish_level==1 はentryの所有者かfollowerしか見えない
-        if ( $entry->{user} == $user->{id} ) {
+        if ( $user && $entry->{user} == $user->{id} ) {
             # ok
         } else {
             my $follow = $self->dbh->select_row(
