@@ -5,6 +5,8 @@
 # Copyright 2013, KAYAC Inc.
 #
 
+package "wget"
+
 git "/home/isucon/isucon3" do
   repository "https://github.com/kayac/isucon3.git"
   reference "master"
