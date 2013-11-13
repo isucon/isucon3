@@ -1,0 +1,37 @@
+---
+abstract: 'Perl extension for Generating 24 bit Images'
+author:
+  - 'Tony Cook <tonyc@cpan.org>, Arnar M. Hrafnkelsson'
+build_requires:
+  ExtUtils::MakeMaker: 0
+configure_requires:
+  ExtUtils::MakeMaker: 0
+dynamic_config: 1
+generated_by: 'ExtUtils::MakeMaker version 6.66, CPAN::Meta::Converter version 2.112621'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Imager
+no_index:
+  directory:
+    - t
+    - inc
+    - PNG
+    - GIF
+    - TIFF
+    - JPEG
+    - W32
+    - FT2
+    - T1
+recommends:
+  Parse::RecDescent: 0
+requires:
+  Scalar::Util: 1
+  Test::More: 0.47
+  XSLoader: 0
+resources:
+  bugtracker: http://rt.cpan.org/NoAuth/Bugs.html?Dist=Imager
+  homepage: http://imager.perl.org/
+  repository: git://git.imager.perl.org/imager.git
+version: 0.97

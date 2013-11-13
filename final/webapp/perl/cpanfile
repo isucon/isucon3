@@ -1,0 +1,33 @@
+requires "Kossy";
+requires "Digest::SHA";
+requires "DBIx::Sunny";
+requires "JSON::XS";
+requires "JSON::Types";
+requires "Starlet";
+requires "Data::UUID";
+
+on 'test' => sub {
+    requires 'Test::More';
+    requires 'LWP::UserAgent';
+    requires 'HTTP::Request::Common';
+    requires 'Image::Size';
+    requires 'Imager';
+    requires 'Path::Tiny';
+    requires 'Test::Deep';
+    requires 'Test::Deep::Matcher';
+    requires 'Test::mysqld';
+};
+
+on 'develop' => sub {
+    requires "Furl";
+    requires "Clone";
+    requires "HTTP::Request";
+    requires "Log::Minimal";
+    requires "Mouse";
+    requires "Parallel::Benchmark";
+    requires "Path::Tiny";
+    requires "Sub::Rate";
+    requires "Time::HiRes";
+    requires "Try::Tiny";
+    requires "String::Random";
+};

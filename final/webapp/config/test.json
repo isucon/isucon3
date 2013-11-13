@@ -1,0 +1,1 @@
+{"database":{"dsn":["DBI:mysql:dbname=test;mysql_socket=/var/folders/yg/2g7nbphn3pb016n_n3r6f4940000gn/T/gLgDs97egj/tmp/mysql.sock;user=root"]},"data_dir":"t/tmp/data"}

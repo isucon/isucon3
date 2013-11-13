@@ -1,0 +1,3 @@
+default[:xbuild] = {
+  :user => "root",
+}

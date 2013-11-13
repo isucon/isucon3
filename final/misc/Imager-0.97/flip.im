@@ -1,0 +1,193 @@
+#define IMAGER_NO_CONTEXT
+#include "imager.h"
+
+static void flip_h(i_img *im);
+static void flip_v(i_img *im);
+static void flip_hv(i_img *im);
+
+#define XAXIS 0
+#define YAXIS 1
+#define XYAXIS 2
+
+/*
+=item i_flipxy(im, axis)
+
+Flips the image inplace around the axis specified.
+Returns 0 if parameters are invalid.
+
+   im   - Image pointer
+   axis - 0 = x, 1 = y, 2 = both
+
+=cut
+*/
+
+undef_int
+i_flipxy(i_img *im, int direction) {
+  dIMCTXim(im);
+  i_clear_error();
+
+  im_log((aIMCTX, 1, "i_flipxy(im %p, direction %d)\n", im, direction ));
+
+  if (!im)
+    return 0;
+
+  switch (direction) {
+  case XAXIS: /* Horizontal flip */
+    flip_h(im);
+    break;
+
+  case YAXIS: /* Vertical flip */
+    flip_v(im);
+    break;
+
+  case XYAXIS: /* Horizontal and Vertical flip */
+    flip_hv(im);
+    break;
+
+  default:
+    im_log((aIMCTX, 1, "i_flipxy: direction is invalid\n" ));
+    im_push_errorf(aIMCTX, 0, "direction %d invalid", direction);
+    return 0;
+  }
+  return 1;
+}
+
+static void
+flip_row_pal(i_palidx *row, i_img_dim width) {
+  i_palidx tmp;
+  i_palidx *leftp = row;
+  i_palidx *rightp = row + width - 1;
+  
+  while (leftp < rightp) {
+    tmp = *leftp;
+    *leftp = *rightp;
+    *rightp = tmp;
+    ++leftp;
+    --rightp;
+  }
+}
+
+#code
+
+static void
+IM_SUFFIX(flip_row)(IM_COLOR *row, i_img_dim width) {
+  IM_COLOR tmp;
+  IM_COLOR *leftp = row;
+  IM_COLOR *rightp = row + width - 1;
+  
+  while (leftp < rightp) {
+    tmp = *leftp;
+    *leftp = *rightp;
+    *rightp = tmp;
+    ++leftp;
+    --rightp;
+  }
+}
+
+#/code
+
+static void
+flip_h(i_img *im) {
+  i_img_dim y;
+  if (im->type == i_palette_type) {
+    i_palidx *line = mymalloc(im->xsize * sizeof(i_palidx));
+    for (y = 0; y < im->ysize; ++y) {
+      i_gpal(im, 0, im->xsize, y, line);
+      flip_row_pal(line, im->xsize);
+      i_ppal(im, 0, im->xsize, y, line);
+    }
+    myfree(line);
+  }
+  else {
+#code im->bits == i_8_bits
+    IM_COLOR *line = mymalloc(im->xsize * sizeof(IM_COLOR));
+    for (y = 0; y < im->ysize; ++y) {
+      IM_GLIN(im, 0, im->xsize, y, line);
+      IM_SUFFIX(flip_row)(line, im->xsize);
+      IM_PLIN(im, 0, im->xsize, y, line);
+    }
+    myfree(line);
+#/code
+  }
+}
+
+static void
+flip_v(i_img *im) {
+  i_img_dim topy = 0;
+  i_img_dim boty = im->ysize - 1;
+  if (im->type == i_palette_type) {
+    i_palidx *top_line = mymalloc(im->xsize * sizeof(i_palidx));
+    i_palidx *bot_line = mymalloc(im->xsize * sizeof(i_palidx));
+    while (topy < boty) {
+      i_gpal(im, 0, im->xsize, topy, top_line);
+      i_gpal(im, 0, im->xsize, boty, bot_line);
+      i_ppal(im, 0, im->xsize, topy, bot_line);
+      i_ppal(im, 0, im->xsize, boty, top_line);
+      ++topy;
+      --boty;
+    }
+    myfree(bot_line);
+    myfree(top_line);
+  }
+  else {
+#code im->bits == i_8_bits
+    IM_COLOR *top_line = mymalloc(im->xsize * sizeof(IM_COLOR));
+    IM_COLOR *bot_line = mymalloc(im->xsize * sizeof(IM_COLOR));
+    while (topy < boty) {
+      IM_GLIN(im, 0, im->xsize, topy, top_line);
+      IM_GLIN(im, 0, im->xsize, boty, bot_line);
+      IM_PLIN(im, 0, im->xsize, topy, bot_line);
+      IM_PLIN(im, 0, im->xsize, boty, top_line);
+      ++topy;
+      --boty;
+    }
+    myfree(top_line);
+    myfree(bot_line);
+#/code 
+  }
+}
+
+static void
+flip_hv(i_img *im) {
+  i_img_dim topy = 0;
+  i_img_dim boty = im->ysize - 1;
+  if (im->type == i_palette_type) {
+    i_palidx *top_line = mymalloc(im->xsize * sizeof(i_palidx));
+    i_palidx *bot_line = mymalloc(im->xsize * sizeof(i_palidx));
+    while (topy < boty) {
+      i_gpal(im, 0, im->xsize, topy, top_line);
+      i_gpal(im, 0, im->xsize, boty, bot_line);
+      flip_row_pal(top_line, im->xsize);
+      flip_row_pal(bot_line, im->xsize);
+      i_ppal(im, 0, im->xsize, topy, bot_line);
+      i_ppal(im, 0, im->xsize, boty, top_line);
+      ++topy;
+      --boty;
+    }
+    myfree(bot_line);
+    myfree(top_line);
+  }
+  else {
+#code im->bits == i_8_bits
+    IM_COLOR *top_line = mymalloc(im->xsize * sizeof(IM_COLOR));
+    IM_COLOR *bot_line = mymalloc(im->xsize * sizeof(IM_COLOR));
+    while (topy < boty) {
+      IM_GLIN(im, 0, im->xsize, topy, top_line);
+      IM_GLIN(im, 0, im->xsize, boty, bot_line);
+      IM_SUFFIX(flip_row)(top_line, im->xsize);
+      IM_SUFFIX(flip_row)(bot_line, im->xsize);
+      IM_PLIN(im, 0, im->xsize, topy, bot_line);
+      IM_PLIN(im, 0, im->xsize, boty, top_line);
+      ++topy;
+      --boty;
+    }
+    if (topy == boty) {
+      IM_GLIN(im, 0, im->xsize, topy, top_line);
+      IM_SUFFIX(flip_row)(top_line, im->xsize);
+      IM_PLIN(im, 0, im->xsize, topy, top_line);
+    }
+    myfree(top_line);
+    myfree(bot_line);
+#/code 
+  }
+}

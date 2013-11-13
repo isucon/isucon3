@@ -1,0 +1,1404 @@
+Revision history for Perl extension Imager.
+
+0.01  Thu May  6 15:25:03 1999
+        - original version; created by h2xs 1.18
+
+0.02  Mon May 10 20:20:20 1999
+        - Added PPM writer, and a new return type to
+        be used to return undef() from a function returning
+        (int)0.
+
+0.03  Thu May 20 23:23:23 1999
+        - Added Pseudo image handling thingies, now
+        you can use your own get and put pixel routines.
+
+0.04  Mon May 24 22:14:55 1999
+        - Rewrote parts of jpeg support.
+
+0.05  Tue May 25 23:40:01 1999
+        - Added png support with libpng
+        fixed error reporting and return types from
+        some format routines.
+
+0.06  Wed May 26 19:05:39 1999
+        - Fixed Data::Dumper being used when it shouldn't have
+        added feature checking to see at run time if 
+        certain formats are avaliable.
+        removed some ancient C++ style comments that hadn't 
+        been properly removed, some out of bounds errors in ppm.c
+        fixed tests so missing features are skipped.
+
+0.07  Thu May 27 03:15:00 1999
+        - Fixed the typemap for i_img and i_color so that you can pass
+        a null pointer to them without getting a warning when warnings
+        are enabled. Maybe this is counter perl but it greatly increases
+        the usability of the functions.
+
+0.08   Fri May 28 14:13:21 1999
+         - Added support for gif via, giflib or libungif.
+         gif is so ridden with patent issues but the user
+         can decide which library to use since they have the same
+         include files and calling interface.
+
+0.09   Mon May 31 17:52:32 1999
+         - Added image scaling per axis - faster than doing both
+         axes at the same time.  The current method uses lancoz
+         kernel and filtering. But more types should be added -
+         including: nearest neighbor, linear, and bicubic.
+
+0.10   Mon Jun  7 03:25:54 1999
+         - Added T1 postscript font handling. It's very primitive
+         at the moment but creative people can do nice stuff 
+         with it.  Currently it is not possible to have it 
+         generate an image of the correct size for a given string 
+         but that is on the way.
+
+0.11   Mon Jun  7 14:43:35 1999
+         - Added T1 features for direct to image rendering in 
+         a single color.  fixed some debug messages going to 
+         stderr instead of a log file.
+
+0.12   Tue Jun  8 02:58:43 1999
+         - Fixed bugs in jpeg.c when loading images. Also specified
+         prototype behaviour to on in the Imager.xs file. The
+         Makefile.PL step doesn't complain anymore so that is
+         hopefully fixed.
+
+0.13   Wed Jun  9 06:55:58 1999
+         - Fixed Imager.xs for init_log call.  Minor fixes here
+         and there.
+
+0.14   Thu Jun 10 14:11:22 1999
+         - Rewrote most of the logging stuff so that it is now
+         possible to remove all logging from the XS part of the
+         module.  Also some primitive check of memory usage was
+         added. Claes Jacobsson sent in some filters, inverter,
+         contrast and a noise filter.
+
+0.15   Mon Jun 14 08:13:29 1999
+          - Wrote minor enhancement on the calling syntax list.
+          Started on the object interface - added better support
+          for quering avaliable filetypes.  Fixed memory leaks in       
+          most loaders. New filters from Claes in this version
+          are bumpmap, postlevels and mosaic.
+
+0.16    Wed Jun 16 20:54:33 1999
+          - Added fixes to the BEGIN and END parts, added writer
+          function for the OO interface. Also added basic IPTC 
+          reading support for jpegs.  Also a few filters have been
+          added to the OO interface.
+
+0.17    Thu Jun 24 11:09:15 1999
+          - Added dynamic loading stuff - It's still missing a nice
+          global symbol table. This will be fixed in next release.
+          also calling the plugins is not all to easy at the moment.
+
+
+0.18    Mon Jun 28 12:31:33 1999
+          - Added global symbol table - plugins now need a symbol
+          table pointer in them. When the module is loaded it is
+          set to point at the global symbol table. Also some barebones
+          Makefile.PL has been made in the dynfilt directory - it works
+          on my system - I hope it does on yours.
+
+
+0.19    Fri Jul  1 15:00:03 1999        
+          - Added a way new scaling method for creating easy previews.
+          It only uses nearest neighbor, so it's doesn't look very nice
+          but it may be better for applications like remote sensing.
+
+0.20    Mon Jul  5 10:15:37 1999
+          - Added and rewrote documentation.
+
+0.21    Mon Jul  6 19:15:37 1999
+          - Fixed a bug in the scaling routine - it wasn't
+          handling 0< cases.
+
+0.22    Sat Oct  9 07:04:14 1999
+          - Added a new method to write gif images - now 
+          it is possible to have a part of a palette fixed.
+          this is very usefull if one needs to make sure that
+          some color like white is in the pallete.  This method
+          also allows some ditherding and gives better colormap
+          than the mediancut from the gif libraries.  It does
+          need much more cpu power though.  Hopefully later versions
+          will be faster.
+
+0.23    **************** Internal release only
+          - Fixed the %instances bug - caused ALL memory to be leaked.
+          Added real noise function - need feedback on how it should
+          be used. Also box(), and polyline are now in place.  Polygon
+          is missing but antialiased line drawing with integer endpoints are
+          done but should be replaced with a version that can have 
+          floating point endvalues. Two noise filters addded.
+
+0.24    **************** Internal release only
+          - Converted i_color into an object from a reference, so now it's
+        giving an object instead of a void ptr or an integer or something.
+
+0.25    **************** Internal release only
+          - Added basic Truetype functionality - still needs a rewrite
+        to be decent. Currently it's a port of a demo program that
+        uses an awful amount of global variables and there is much IO since
+        no caching of glyphs is done.
+
+0.26    Tue Nov 23 03:57:00 1999 > Development release <
+          - Added transformations so that an image can be wrapped.
+        To achive decent speed a C based stackmachine is included. As a result
+        transformations need to be specified in rpn (postfix) notation. It
+        also can use the Affix::Infix2Postfix class to do the conversion for it.
+
+0.27    Tue Dec 28 03:57:00 1999 > CPAN release <
+          - This is a bugfix version mostly, thanks to claes for pointing
+        out the problems - fixed palette saving wasn't working correctly after
+        version 0.24 - rather surprised this didn't crash everything.
+        Also fixed that for t1 fonts the bounding box wasn't being reported 
+        unless the font had been used before.  This is either a bug in t1lib
+        or a mistake in it's documentation.  Another lingering bug since 0.24
+        what that $img->box() wasn't creating it's default color properly.
+        Added i_tt_text() method and more debuging to the truetype routines.            
+        truetype testcase fixed and old debug rubish removed.
+
+0.28    Tue Jan  4 05:25:58 2000 > CPAN release <
+          - Only fixes to truetype test and transformation tests.
+        Thanks to schinder of cpan testers for testing and reporting.
+
+0.29    Tue Jan  4 21:49:57 2000 > CPAN release <
+          - fixes to get rid of warnings under pre 5.005, 
+        Fixed broken preproccessor directives to work on non gnu
+        compilers.  Fixed DSO test on HPUX - both code errors and
+        HPUX creates .sl instead of .so so the tests were failing.
+
+0.30    Sun Jan  7 05:00:06 2000 > Bunch of Alpha releases <
+          - An attempt to automate installation.
+
+0.31    Sat Jan 15 03:58:29 2000 > Fixes fixes fixes <
+          - Fixed a bug pointed out by Leolo where loading gifs
+        skips the first line of the imageload() has been
+        by read() - for now load is an alias for read.  It will
+        be removed in the future.  Also, fixes dynamic loading on
+        systems that prepend an underscore to symbols.  At the present
+        the only system that I know of that needs this is OpenBSD.
+        BUT YOU MUST RECOMPILE ALL OF YOUR OLD MODULES AGAINST THIS BUILD.
+        Added getchannels() method ( How did I manage to delay this
+        untill now ).  Some document changes but nothing substantial.
+        Also fixed the png read/write routines to handle all colorspaces
+        and images with alpha information.  Also now it's possible to 
+        have Imager guess the format of the files to load or save 
+        when passing files to read or save from the filename.
+        Also all of the tests except dynamic loading now pass on OS/2.
+
+0.32    Tue Feb 29 17:26:00 2000 CPAN RELEASE
+          - Added the getcolorcount method.  Fixed interlace handling
+        on png images.  Fixed the missing channel count in crop()
+        method. Rewrote most of t1lib database stuff - created color
+        and font classes.  T1 stuff is mostly done - TT things were
+        rewritten too and now include most of what is needed for
+        pixmap caching.  Added documentation for fonts.  Comments have
+        been added to some of the relevant c-routines.  Added a copy()
+        function in Imager.xs and a corresponding method name.
+        Changed the underlying data type for the raw XS images from
+        pointers to objects - this will hopefully catch the most
+        basic errors and keep the segfaulting down.  This means that
+        all of the underlying XS calls for readjpeg, readgif, readpng 
+        and readraw do not take the first parameter any more.  
+        Made fixes to keep it not spewing warning on 5.004 perl.        
+
+        **** If you had any code that didn't use the OO interface ****
+        ****         It will probably not work any longer         ****
+        
+0.33    Beta -- No final
+          - Fixed the end message from Imager 0.32.  Destroy called
+        on an empty image.  Did some work on the polygon method.  
+        Some clean up in the Makefile.PL script.  Fixed a buffer
+        overrun in the t_transform in Imager.XS.  Fixed the 
+        error handling in the jpeg loader.  It now correctly
+        returns undef if a load on an image fails.  It also 
+        sends the error messages to the log file.  Added errstr()
+        method to the image object.  Added a new way to read()
+        objects from scalars.  So far this is only implemented for
+        jpeg, png and gif.  ppm and raw soon - as always if someone
+        wants to do an overhaul on the ppm stuff feel free.  It seems
+        like such a basic format that interfacing with a library is more
+        work than implementing all of the needed routines instead.
+
+0.34    Beta -- No final
+          - Bunch of documentation fixes, backed out ppm code.
+        Put in TonyC's giant transform2 patch.  Fixed the patch
+        to make it ansi compliant.  Fixed a bunch of bugs in the
+        Freetype code with regard to vertical and horizontal 
+        positioning and bounding boxes.  Cleaned up a lot of the
+        code so it runs under -Wall.  Code that is still in 
+        development such as the polygon converter do not compile
+        cleanly.  Fixed the non antialiased versions of truetype
+        dump to image routines.  Also removed the FIXME for the 
+        hardcoding of antialias in the Imager string method.
+        Fixed sign error and a missing cache of the bounding box
+        calculation for the rasterize function.  Removed some
+        debugging code I forgot to remove.  Added iolayer.h
+        and iolayer.c but they don't do anything for now.
+        
+0.35    pre2 -- No time yet
+          - Fixed some compile warnings for various files under -Wall.
+        Added functionality for jpeg reading of seekable files, it's not
+        really working yet.  This version is pretty much *not* working.
+        Do not install unless you intend to do a lot of development.
+        Repeat - it doesn't even pass tests (but it compiles).  Ok now reading
+        jpegs works from scalars, my guess is that it also works from non
+        seeking sources such as sockets or pipes.
+
+0.35  pre3 - No time yet
+          - Added the *right* patch from Tony which combines
+        the common code from i_readgif and i_readgif_scalar into
+        i_readgif_low.  Added tiff reading support through iolayer.
+
+0.35  pre4 - No time yet
+          - Added tiff writing (no options) support through
+        iolayer.  Also made some small fixes for the iolayer reading
+        (was always doing two reads when one was needed).  Patched the
+        Imager::read() call so that it now uses a mixture of old and new
+        functions.  
+
+0.35  pre5 - No time yet
+          - Fixed various gnu'isms in the c code (some bugs in the link list
+        implmentation).  Fixed missing #skip codes when gif format is not
+        present in any form.  Added fixes for 5.004_04 in the transform2 function.
+        Made sure it compiles cleanly with sun's cc.  Switched from a .jpeg
+        for transform2 check to a .ppm file so it runs when jpeg is not 
+        present.  Added a test for tiff files in t10formats.t.
+
+
+0.35  pre6 - No time yet
+          - Fixes to Makefile.PL.  Should find freetype includes on more
+        distributions now.  Ran tests on Solaris and Hpux, minor fixes.
+        Compiles with some warnings on with both hpux and solaris' cc.  
+        Made some minor changes to the documentation.  Fixes to tiff.c log
+        code.
+
+0.35  pre7 - No time yet
+          - Fixes 64 bit bug on freebsd.  While libtiff mirrors the effects of
+        lseek it's toff_t is a uint32, while lseek uses off_t which can be a 64
+        bit quantity.  Added the IM_LFLAGS environment variable to help
+        people with broken libgifs (that want to link with X).
+
+0.35  Sun Jan 28 19:42:59 EST 2001
+          - More makefile fixes, fixed a few signedness warnings.  
+        Checked to see if it compiled cleanly on Solaris and HPUX.
+        Fixed a 5.004_04 warning and added more ENV flags for makefile.
+
+0.36    Mon Jan 29 09:36:11 EST 2001
+          - String as 0 or "" caused an error in $img->string().  Fixed a 
+        documentation error invoving string() method syntax.  Merged a patch
+        for non antialised truetype fonts.  Fixed an error in the Makefile.PL
+        which caused a makefile to be generated that bombed with sgi's make.
+
+0.37    Mon Tue 30 09:36:11 EST 2001
+          - Several documentation fixes.  Pod documentation for almost every
+        function in image.c.  Added sys/types.h include in iolayer which was
+        causing problems on various linux systems.
+
+0.38    pre1 - No time yet
+          - Fixed a braindamaged fix on the Makefile.PL file.  Moved the 
+        code for Imager::Color into lib/Imager/Color.pm.  Wrote some pod
+        about how it works.  Made the names of Imager::Color XS routines
+        all begin with ICL_ and used the prefix rules of XS to get nice names
+        in perl.  Found a bug (not fixed) in how XS handles 
+        returning an object to an object it had as a parameter (double
+        free).  
+
+0.38    pre2 - No time yet
+          - Fixes lots of for documentation, patch for freetype bounding
+        box handling.  Split put code for Imager::Font into Font.pm and added
+        more documentation for Font.pm.  Added string local ascender and
+        descender for tt fonts.  Note that this needs to be added to t1 fonts
+        before 0.38 final.
+
+0.38    pre3 - No time yet
+          - Fixed an in consistency in the bounding box functions for t1
+        fonts.  Now both versions get the 6 argument bounding_box method
+        described in Imager::Font.  Started converting the comments in 
+        font.c so that they are viewable by doco.perl.  Added two examples
+        of filters.  Need to make them more usefull and then add more
+        notes than are in compile.txt.
+
+
+0.38    pre4 - No time yet
+          - Completed adding pod comments to font.c, tiff.c and iolayer.c.
+        Those along with image.c should now have every single function 
+        described in pod format.
+
+0.38    pre5 - No time yet
+          - Replaced ppm.c with pnm.c which adds support for pbm/pgm/ppm
+        files ascii and binary formats.  Added patches for the gif routines.
+        Patched some of the color quantizing routines (Leolo and TonyC).
+        There is one bomb and one warning in this test, and frankly I don't
+        see why they are suddenly there.
+
+0.38    pre6 - No time yet
+          - Patch from Tony that fixes infix when Parse::RecDescent is present.
+        Checked some cases where malloc/free were used instead of mymalloc/myfree.
+        Added bufchain iolayer code.  You can now write to a chain of buffers and
+        later slurp it all into a single perl scalar.  Found some oddity of t/t10
+        test not giving the right return value when malloc debugging was enabled.
+        Fixed some of the logging code and the malloc debugging options.  Added 
+        more tests for tiffs.
+
+0.38    pre7 - No time yet
+          - Added i_gradgen code and put it into the filters hash.  Think a
+        seperate pod for filters would be a good idea.  Also removed some of the
+        debugging code from the iolayer.  Added pod comments to filters.c and
+        looked over the code.
+
+0.38    pre8 - No time yet
+          - limited Win32 support, Imager installs and builds using VC++,
+        but there's no image/font format support yet.
+
+0.38  pre9 - No time yet
+          - Added lots of color quantization code from Tony with benchmarks.
+        Also fixes ugly stack overrun in old version.  Added fixes for the lmfixed
+        problem.  Four of them, let's see which is fastest.  This version adds
+        some voronoi partitioning - it's dog slow but it's a reference implementation
+        to check if faster algorithms are doing the right thing [tm].  Added a check
+        for giflib 3.
+        - Win32 support for libpng
+        - fixed set_internal creating 2 refs to one object
+        - Win32 support for jpeg
+        - Win32 support for tiff
+        - base level error reporting code added, I still need to modify
+          older code to use it
+        - fix translate=>'giflib' handling of single-colour images.  
+          Previously a single colour image would cause an error in 
+          MakeMapObject().
+        - fix t/t10formats.t tests against giflib3
+        - added test for transparent gifs
+        - minor doc fixes for transparent gifs
+        - make it less error-prone to write transparent gifs
+        - documented the options for reading raw images
+        - Changes switched to use spaces for formatting
+        - switch gif.c to new error reporting with related changes to
+          Imager.xs, Imager.pm
+        - each of the image formats now have their own test file,
+          extracted from t10formats.t, usually with som extra tests
+        - Added flip() and docs to Imager.pm and i_flipxy to image.c.
+          Added testcases too.
+        - Fixed an overflow bug in png.c
+        - added the colors parameter to Imager::read() which receives 
+          the arrayref of colours that i_readgif(_scalar) returns
+        - fixed a problem in makemap_addi in quant.c where only the first
+          image was compared against the palette when the palette was being 
+          refined.  I screwed up on this originally (TC).  This is the other
+          half of a fix for Leolo's lmfixed problem <sigh>.
+        - makemap_addi() now only puts colours into the palette that it
+          found while optimizing the palette (so we don't get 256 colour
+          palettes for 2 colour images :)
+        - initial implementation of a row-based interface to low-level
+          images (for performance)
+        - changed Imager::read() for GIF so that the arrayref pointed to 
+          by the ref supplied in colors contains Imager::Color objects 
+          instead of more arrayrefs, keep this interface stable until we 
+          can make an informed choice about i_readgif()
+        - incorporated Micksa's faxable tiff support, treating as a type
+          of tiff rather than a separate format
+        - t/t70newgif.t now checks for gif support
+        - added the convert() method
+        - Added support for transparent to alpha conversion during loading
+          of png files.  Note that libpng 1.0.1 is broken in handling this,
+	        we know that 1.0.5 works.
+        - support for writing PGM (portable gray map) files
+        - Fix for i_gifread_low() for images with only a local and no global
+          colormap and an abort if no colormap is present (which is legal
+          in gif).
+        - several fixes to i_readgif_low()
+	- Fixed crop() method so that it is consistent with documentation.
+        - make clean now removes the testout directory
+	- added tests for the OO interface for tiff, added an option to
+	  choose the resolution for fax tiffs, removed some unused code,
+	  fixed minor problems with Imager::write() handling of image types
+        - changed README note on libgif bug to refer to t105gif.t instead
+	  of t10formats.t
+
+0.39  pre1
+	- split Imager::Font into a base, *::Type1 and *::Truetype
+        - writing faxable tiff now allows 2 and 4 channel images
+        - virtual image interface - 8-bit/sample images
+        - paletted images
+        - 16-bit/sample images
+        - masked images
+        - writing non-8bit images to raw
+        - writing   ''       ''   to tiff
+        - i_convert support for high-bit images and paletted images
+        - i_copy for high-bit and paletted images
+        - tests for rubthru
+        - rubthru can now rub a 2 channel image over a 1 or 3 channel 
+          image
+        - rubthru for high-bit images
+        - i_readgif_multi functions, which return all the frames from a
+          GIF file, along with a bunch of meta-information as tag
+        - OO interface to tags
+        - OO interface read_multi() to read multi-image files (just GIF
+          so far)
+        - documentation for the multi-image GIF reading and tags
+        - rotate() method with rotate by steps of 90 degrees (and docs)
+        - fixed a bug in i_img_pal_new_low()
+        - added gaussian to the filters list
+        - documented the individual filters
+	- fixed the right-hand side of bounding boxes for TT fonts 
+	  where the last character overlaps the advance width (eg. 
+	  italic fonts)
+        - added rotation by exact amounts in degrees or radians,
+          implemented using the matrix idea from Addi.  The procedural
+          matrix transformer is exposed, but still needs testing (as XS)
+          and needs an OO interface, hopefully with some helper tools,
+          like the preset interface with ->convert().
+        - MY::postamble() in Makefile.PL included a broken rule 
+          (Makefile.PL 1.13.2.5)
+	- support for GDI fonts under Win32
+	- made that work for cygwin too (needs the w32api package)
+	- freetype1 support under Win32
+	- t1lib support under Win32
+	- fixed a minor bug in font.c (invalid font files caused a SEGV)
+	- checked cygwin for both t1lib and freetype1
+        - freetype 2 support
+        - exposed the matrix_transform() function to the OO interface
+        - added Imager::Matrix2d convenience class
+        - support for setting the resolution when writing to PNG
+        - retrieve physical resolution to tags when reading from PNG
+        - found an XS bug in the interface to i_tags_add()
+        - fixed handling of writing text to a channel with freetype2 
+          (sometimes the edge of a character would damage the edge of the 
+          previous character)
+        - some utf8 support for freetype2
+        - some vertical layout support for freetype2
+        - named parameters for specifying colors, with quite a few options.
+        - glyph size issues for freetyp2
+        - minor problem in handling of canon option
+        - low-level bmp writing (moving it to laptop)
+        - Windows BMP reading and writing
+        - added OO interfaces for the mosaic, bumpmap, postlevels and
+          watermark filters
+        - added t/t61filters.t to test the filters
+        - fixed some problems in jpeg handling from the exp_represent merge
+        - fixed buffer flushing for wiol jpeg code
+        - added some tests that will hopefully catch it in the future
+        - added the OO interfaces to the mosaic, bumpmap, postlevels and
+          watermark filters, and documented them
+        - fixed a sample size conversion problem in i_gpixf_d() etc.
+        - added simple color representation conversion functions (used
+          in i_fountain().)
+        - added the fountain filter:
+          - creates gradients similar to paint software
+          - 90% support for GIMP gradient files
+          - OO interface and documentation
+          - Imager::Fountain for building/loading fill definitions
+          - named value translation for filters
+        - added a generic fill mechanism
+          - created versions of i_box() and i_arc() that can fill using
+            generic fills
+          - solid generic fills (with alpha blending if asked for)
+          - hatched generic fills (with some options)
+          - fountain generic fills
+          - sample code to generate an examples page
+        - improved the scale* hatches a bit
+        - add the flood_fill() method (using the existing i_flood_fill)
+        - implement i_flood_cfill() based on i_flood_fill, and 
+          add general fills to the flood_fill() method
+        - generalize the combine parameter to get different ways of 
+          combining the fill with the target
+        - the tt driver (freetype 1) didn't handle the first character
+          hanging off the left of the character cell
+        - the tt driver produces some artifacts when characters
+          overlapped
+        - error handling for writing jpeg images
+        - writing paletted images to GIF now uses the image palette
+          if it's small enough
+        - $img->arc() now calls i_circle_aa() if a complete circle is
+          being drawn in a plain color
+        - image based fills
+        - unsharp mask
+        - make i_conv() clamp the bottom end of the samples range too
+          (makes it useful for sharpening)
+        - adjust ascender/descender values for FT1.x to avoid losing
+          descenders (specifically the bottom of "g" in ImUgly.ttf or
+          arial.ttf at 14pixels)
+        - added tga.c to read targa images
+        - added i_bumpmap_complex to do more accurate bumpmapping
+        - added an image type with doubles as samples
+        - change i_copy() and i_sametype() to handle double/sample images
+        - added basic POD to trans2.c
+        - transform2 now uses the error interface
+        - myrealloc() is implemented for malloc debug mode
+        - now buffer chains are freed when destructor for Imager::IO
+          is called
+        - adjusted the Lanczos window width for the scaling code and
+          added code to normalize the filter generated to preserve
+          intensity scaling.
+        - constant edge extension for scaling operations
+        - better error checking of automatic fill conversions
+        - fix some range checking for the fountain fill segment type
+
+0.39  pre2
+	- A few scattered mymalloc/free fixes
+        - io_buffer implemented as a source for io layer and
+          XS and perl OO code added.
+        - Test for iolayer t/t07iolayer.t implemented.
+	- Fixed known memory leaks.
+	- gif screen was wasn't being calculated correctly
+
+0.39    Released: Nov 2 2001.
+
+0.40  pre1
+        - anti-aliased polygon fill
+        - add general fill to polygon fill
+        - make color values smarter for the drawing functions
+        - implemented reading and writing the TIFF text tags
+        - added prototypes for some of the derivative tags functions
+        - read paletted tiff images into Imager paletted images
+        - on partial tiff image reads, set the i_incomplete tag
+        - tiff reading now uses the error stack
+        - use the error stack value from reading bmp files
+        - fix an error message in bmp.c
+        - added has_chars() method to Imager::Font::FreeType2
+        - freetype 2 bounding box function didn't know UTF8 (doh!)
+        - write paletted images as paletted to tiff
+	- initialize counter for packing 4 bit data
+        - don't allocate hashboxes as locals since it overflows the 
+	  stack by default in Darwin
+        - applied T1 afm patch from Claes Jacobsson
+        - split IM_INCPATH and IM_LIBPATH with $Config{path_sep}, so they
+          work on Windows
+        - Added memory pools for easy cleanup of temp buffers
+        - Added read support for sgi .rgb files.
+        - io_new_fd() now creates a FDSEEK io object
+        - implemented i_readgif_wiol()
+        - Imager->read() now uses i_readgif_wiol();
+        - extend callback iolayers at C and Perl levels
+        - implemented i_writegif_wiol()
+        - split out Perl iolayer initialization into private methods
+        - add tests for each type of iolayer in t50basicoo.t
+        - read/write multi-image tiff files
+        - tests in t50basicoo.t for multi-image/file
+        - ASCII PBM files were reading white as dark gray (255 vs 1)
+        - modify the Freetype2 font code to pick it's own encoding
+          rather than using whatever strange translation FT2 happens to 
+          pick
+        - modify the FT1 font code to use the first encoding as a default
+          if we don't find a unicode encoding
+        - use the glyph bbox to calculate the glyph bitmaps for rendering
+          with FT1 rather than the global ascender/descender.  This helps
+          with fonts that have broken metrics.
+	- fix calculation of descender for FT2, it was calculating the
+	  minimum decent rather than the maximum for the characters in 
+	  the string
+	- didn't set default for bounding_box() utf8 parameter (caused a
+	  warning when calling bounding_box() on a FT2 font with no utf8
+	  parameter)
+	- Added lib/Imager/Draw.pod documentation of primitives.
+	- Added lib/Imager/Transformations.pod, some docs of simple transforms.
+	- Added lib/Imager/ImageTypes.pod, draft of ImageType pod.
+	- Added lib/Imager/Filters.pod, draft of Filters pod.
+	- Added lib/Imager/Engines.pod, draft of Engines pod.
+        - added getpixel() and setpixel() methods
+        - added Artur's OSX dlload() emulation, with minor changes
+        - modified _color() to work around a 5.6.0 bug
+        - replaced old gif options with tags
+        - we now log which memory block is being freed before giving 
+          an error on it being re-freed
+        - fixed stupid bug in deleting tags
+	- fixed minor pod errors involving &gt;
+
+0.40pre2
+        - make t1log optional, defaulting to off.  You can enable the log
+          with Imager::init(t1log=>1) (Ticket #369)
+        - quote a few hash key strings to prevent warnings on 5.004
+        - modify quantization code to handle 1 channel images 
+          correctly (Ticket #365)
+        - make channel pointer to i_gsamp() const int * so we can pass
+          const arrays
+        - handle the presence of the default broken giflib better,
+          by giving them some more prose about the problem, and skipping
+          all but the first test that fails with the broken giflib
+        - i_box_cfill() went into an infinite loop on fountain fills
+          or fills on images with more than 8-bits/sample
+        - hide more of our Darwin dlload emulation to prevent runtime
+          symbol conflicts
+        - use INT2PTR() and PTR2IV() macros instead of direct casts to
+          prevent pointer vs int size warnings on 64-bit builds of perl.
+        - add our own INT2PTR and PTR2IV definitions when perl doesn't
+          supply them
+        - difference() method
+        - hide (with static) or rename many symbols that could possibly
+          cause conflicts with other libraries or perl
+        - Fix runaway cache problem for freetype1 font cache.
+        - Added version logging when log is started.
+
+0.40
+        - difference() wasn't setting an alpha channel when the input
+          image didn't have one
+        - improve crop() documentation, see
+          http://perlmonks.org/index.pl?lastnode_id=155767&node_id=155428
+        - handle the first "buggy giflib" test more portably.  Previously
+          it used fork() which caused problems on systems that didn't have
+          a real fork().
+
+0.41
+        - skip() in testtools should be skipn() and it should use the 
+          loop variable for the test number
+
+0.42
+        - quote the 'min' parameter to scale in Imager::Transformations
+          and at least mention it in the docs beyond the examples
+        - document the values for the read() and write() method type 
+          parameter
+        - support UTF8 text with Freetype 1.x 
+        - second parameter to SvPV() must be of type STRLEN
+        - Doc pathces from cogent.
+        - Fixed out of bounds access on bitmap for flood fills.
+        - some char * vs unsigned char * casts missing on OSF1 v4.0
+        - some enums had , on the last item in datatypes.h, which OSF1
+          didn't like
+        - Compaq C 6.4 (OSF1) claims to be C99 but doesn't provide 
+          stdint.h, don't try to use it under OSF
+        - fix missing initialization in tags.c
+        - Change i_draw to i_line and have it use Bresenham's line
+          drawing algorithm.
+        - support has_chars() method for Freetype 1.x
+        - fixed log message for i_ft2_has_chars()
+        - fixed some broken checking for UTF8 in FT2 code
+        - handle UTF8 strings passed to T1 low-level functions
+        - handle flags for underline, strikethrough and overline for T1
+          low-level output functions
+        - OO interfaces to UTF8 and flags, for now leaving the flags as
+          specific to Imager::Font::Type1
+        - mc_web_map was storing colors with an alpha of 0
+        - update the URLs for libpng and zlib
+        - Fixed empty string handling for tt font driver.
+        - Fixed tiff handling of images all contained in a 
+          single strip (rowsperstrip = -1) and added a hack
+          for images missing the rowsperstrip tag.
+        - Fixed default parameters for crop()
+        - Added Preliminary specialized scaling code.
+        - Added image type detection.
+        - added smoke test for win32 font bounding_box() method, and
+          fixed the problem reported in ticket #1748.
+        - update t37w32font.t to use i_line() instead of i_draw()
+        - replaced non-portable call to rint() with (int)(dy+0.5) (so we
+          can build on Win32)
+        - the default tifflib warning handler was crashing on Win32
+          under ActivePerl, when an unrecognized tag was read from the 
+          file.  For now we'll just drop the warnings in the bit bucket.
+          (Ticket #1513)
+        - the code to read multiple tiffs didn't handle files with more
+          than five images correctly, causing a memory overrun.
+        - fix some minor test code hiccups
+        - implemented i_t1_has_chars(), tests for same
+        - added ExistenceTest.{pfb,afm,ttf} for testing $font->has_chars
+        - tests for Imager::Font::Type1::has_chars();
+        - tests for Imager::Font::Truetype::has_chars();
+        - internal and external bounding box calculations now use
+          the same hint flags as text output for Freetype 2.x
+        - made the i_foo_bbox() interface more expandable by using
+          symbolic constants for the sizes and array offsets
+        - added a / character to the ExistenceTest.foo fonts that 
+          overlaps the right side of the character cell, to test the 
+          advance width reporting.
+        - added advance width to the i_foo_bbox() interface, and 
+          implemented it for FT2, FT1 and Type 1
+        - Imager::Font::bounding_box() now returns an Imager::Font::BBox
+          object in scalar context.
+        - implemented $font->align() text output method, for simple output
+          of aligned text
+        - created Imager::Font::Wrap::wrap_text to perform simple text 
+          wrapping
+        - FT1, FT2 and T1 fonts now support the face_name method
+        - FT1, FT2 and T1 now support the glyph_names() method
+        - Debian woody supplied FT2.0.9, which didn't support 
+          FT_Has_PS_Names(), so we use the FT_HAS_GLYPH_NAMES() macro 
+          instead.
+        - some older FT1 don't define TT_MS_LANGID_ENGLISH_GENERAL,
+          which we use, define it if freetype doesn't.
+        - Added extra options to rubthrough() so only a subpart of
+          source image is used.
+        - the image fills didn't handle filling with source images of
+          less than four channels correctly
+        - added comment support the postfix transform2() expression
+          parser
+        - transform2() can now produce images with other than 3 channels.
+        - added a correct T_AVREF input mapping to the typemap to 
+          simplify parameter lists
+	- shut off one of the align subtests in the ft2 test.  The triggering
+	  is likely an ft2 bug.
+        - removed some half written scaling optimization code.
+	- added /sw/lib and /sw/include to the Makefile.PL code for osX.
+	- removed all references to the www.eecs.umich.edu page and changed
+	  them to imager.perl.org ones.
+
+0.43
+	- added log() and exp() functions to transform2()
+	- change the getpN() functions in transform2() to set a 
+	  reasonable alpha if the input image has no alpha
+	- document the constants that transform2() defines
+	- skip the right number of tests when FT2 isn't available
+	- This version pushed to CPAN because of skip problem in FT2 test.
+
+0.43_01 Fri 8 Oct 2004
+	- only call FT_Get_Postscript_Name() on FT 2.0.6 and later
+	- put the IM_LIBPATH and IM_INCPATH values first in the search
+	  path so the builder gets their local versions if desired rather
+	  than the system versions they might be trying to avoid
+	- document the exp() and log() transform2() functions
+	- document the constants normally set by transform2().
+	- refer the user to appropriate documents in the example in 
+	  Imager.pm
+	- change the list of documents in Imager.pm to move the document 
+	  names out of the =item lines so we can make them into links
+	- the scale() method now produces a warning when called in
+	  void context.
+	- font.c now only uses the defined T1Lib error codes
+	- update ppport.h and remove the duplicate definitions from
+	  Imager.xs.  Had to mangle ppport.h to prevent duplicate global
+	  function definitions.
+	- newer versions of tifflib require that all of the function
+	  pointers passed to TIFFClientOpen be non-NULL, the mmap() and
+	  munmap() pointers were always NULL and the sizeproc was
+	  sometimes NULL.
+        - there would be a link or load time error on m_init_log() if
+          Imager was built with IM_NOLOG, fixed by renamed init_log()
+          to m_init_log() in log.c (thanks to Takumi Yamani)
+        - moved some variable definitions to the right place
+        - the Win32 font driver bounding box function now returns the 
+          right number of values (both thanks to Takumi Yamani)
+        - the Win32 font driver now uses DEFAULT_CHARSET rather than
+          ANSI_CHARSET are the lfCharSet value for the LOGFONT,
+          as suggested by Takumi Yamani.
+        - fontfiles/ExistenceTest.{pfb,ttf} weren't marked as
+          binary in the CVS repository (caused test failures if you
+          built from CVS on Win32)
+        - Makefile.PL should now handle INCLUDE or LIB with spaces in them
+          correctly on Win32.
+        - the pnm reader read maxval for ppm/pgm files and then ignored it,
+          it's now validated (0 < maxval < 65536) and used to scale
+          samples.  Note that binary ppm/pgm files (P6/P5) with maxval >
+          255 result in an error, since I didn't want to add new features
+          just yet, just get the code that's there working correctly.
+          Thanks to Elthek on rhizo for reporting this and help in 
+          tracking it down.
+          Resolves https://rt.cpan.org/Ticket/Display.html?id=7465
+        - added a bunch of tests for reading pnm files.
+        - previously, if you supplied to_paletted and empty color map
+          and set make_colors to 'none', quant_translate() would segfault.
+          This was because it was making the reasonable assumption that
+          you'd have colors to map to.  quant_translate() now checks there
+          is at least one color and return NULL if there isn't.
+        - i_img_to_pal() now does error checking of the value returned by
+          quant_translate().
+        - Imager::to_paletted() now checks for success/failure of 
+          i_img_to_pal() correctly and does appropriate error handling.
+        - i_writegif_low() did no error checking on the result of
+          quant_translate(), it now does
+        - we now test that trying to write a GIF image with no palette
+          allowable by the quant options is a failure.
+        - Imager::write() was doing nothing with the result of the call 
+          to i_writegif_gen(), in particular it wasn't returning () on 
+          failure.
+        - added tests for paletted image handling and the methods
+          specific to those images
+        - the XS for i_setcolors() was missing the OUTPUT clause for
+          RETVAL, and hence wasn't returning failure on failure.
+        - supplying a sufficiently small scaling value could make the
+          scale() method return an image with zero height or width.
+          Several of the above together resolve 
+          https://rt.cpan.org/Ticket/Display.html?id=7467
+        - the void context warning for scale() now includes the callers
+          filename/line (instead of the default of Imager.pm line 15xx)
+        - Imager->new will now return undef if the dimensions or number of
+          channels specified for an image are out of range.  An error
+          message can be retrieved with Imager->errstr.
+        - added the C<builtin> color specifier and the 
+          Imager::Color::Table class which defines those colors.
+          Resolves https://rt.cpan.org/Ticket/Display.html?id=2593
+        - added the equals() method to Imager::Color.
+          Resolves https://rt.cpan.org/Ticket/Display.html?id=2238
+        - prevent a test warning introduced by the above
+        - the rotate() and matrix_transform() methods now accept a 'back'
+          parameter specifying a background color.  This is only used
+          where there is no source data (think of the corners around an
+          image rotated 45 degrees) and it not combined with transparent
+          pixels from the source image.
+          Resolves https://rt.cpan.org/Ticket/Display.html?id=6140
+        - removed a warning generated by the new matrix_transform() test
+        - added a method index to Imager.pm
+        - corrected "flood fill" to "flood_fill" in Imager/Draw.pod
+        - removed compose() method from Imager/Transformations.pod since
+          it isn't implemented yet
+        - the image resulting from a crop is now the same type as the
+          source image (paletted vs direct, bits/sample)
+          Resolves https://rt.cpan.org/Ticket/Display.html?id=7578
+        - the parameters to crop() weren't handled correctly in most 
+          cases other than supplying left,top,right,bottom.
+        - clarified the documentation for crop() providing more detail
+          and more examples
+        - the edges of the cropped area are now cropped against the 
+          edges of the source image
+        - cropping to zero width/height is treated as an error (no
+          image is returned and $src->errstr has a message)
+          Resolves https://rt.cpan.org/Ticket/Display.html?id=7581
+        - built 0.43_01 for testing
+
+0.43_02 Mon 26 Oct 2004
+
+- the changes to scale() had some problems with integer vs floating point
+  calculations (only caught in tests under perl 5.8.5 <sigh>)
+- the FT2 glyph_names() method didn't do correct error handling
+  when the string parameter wasn't supplied
+- i_ft2_glyph_name() accepted only an unsigned char as the
+  character code to get the name for, which meant it
+  didn't work for unicode characters \x{100} or above
+- the XS for i_ft2_glyph_name() had a similar problem
+- added NameTest.ttf to be used in checking unicode glyph
+  names
+- added reliable_only optional parameter to the glyph_names()
+  method so you can ignore theresult of FT_Has_PS_Glyph_Names()
+- handle errors given by i_ft2_glyph_name() a bit more
+  correctly
+- the FT1 glyph_names() method didn't do correct error handling 
+  when the string parameter wasn't supplied
+- some memory allocated when creating a callback IO object (io_new_cb)
+  wasn't being released (detected with valgrind)
+- the testtools.pl match[nx]() functions escapes the test string on 
+  test failure a bit better
+- the XS code for i_tt_glyph_name() used unsigned char to store a 
+  unicode character when it should have used unsigned long.
+- the XS code for i_t1_glyph_name() used unsigned char to store a 
+  unicode character when it should have used unsigned long.
+- resolves https://rt.cpan.org/Ticket/Display.html?id=7949
+- the type 1 glyph_names() method didn't do correct error handling 
+  when the string parameter wasn't supplied
+- renamed io.h to imio.h to prevent problems building under cygwin.
+  resolve https://rt.cpan.org/Ticket/Display.html?id=7948
+- i_writegif_low() wasn't setting the returned global palette, which
+  meant a rubbish palette was returned to the user (detected with valgrind)
+- built 0.43_02 for testing
+
+0.43_03 Wed 8 Dec 2004
+
+- change the "double-include" protection macro that imio.h uses.
+- updated download locations for the various libraries that Imager 
+  depends on.  Added some advice for cygwin.
+- more information on gif library versions in README and Makefile.PL
+- creating an image where the size of the allocated image buffer would
+  overflow an integer would cause too small a buffer to be allocated.
+  This could potentially be a security hole.
+  partly resolves https://rt.cpan.org/Ticket/Display.html?id=8213
+- set i_format to jpeg for jpeg files and test for it
+- set i_format to png when reading png files and test for it
+- i_yres was being set to the xres when reading a png file
+- added many bad BMP files to test various code paths in bmp.c, and 
+  made many minor fixes to bmp.c to make them work:
+  - it was possible for various types of read failures to SEGV, both
+    as NULL pointer dereferences and buffer overflows
+  - some errors, like palettes being too large for the number of bits
+    per pixel, were not being caught
+  - failing to read all of a packed data structure would not cause
+    a read failure
+  - invalid compression types were not always caught
+  - error messages are more consistent (still not always great messages,
+    but one step at a time)
+- added bmp_compression_name, bmp_used_colors, bmp_filesize, bmp_bit_count 
+  tags on reading a BMP file
+- added tools/imager to the distribution.  This is still very 
+  experimental and untested.  Patches welcome, if you write tests to go
+  with them.
+- the BMP reader now validates the bfOffBits value from the BMP header
+  and skips to that offset before reading image data.  Previously this
+  value was read but otherwise ignored.
+- added --palette action to tools/imager
+- i_img_pal_new() now releases the image object memory if creation
+  fails.
+- set i_format to gif when reading gif files and test for it
+- set i_format to pnm when reading pnm files and test for it
+- set i_format to tga when reading tga files and test for it
+- handle image creation failures when reading tga files
+- set i_format to tiff when reading tiff images and test for it
+- handle image creation failures when reading tiff files
+- test t/t35ttfont.t no longer requires TTFONTTEST to be set (and 
+  hasn't for a long time,) removed that requirement from README
+- updated home page URLs throughout the .pods
+- added information on reporting bugs to the SUPPORT section of Imager.pm
+- regops.perl now sorts the dumped data structure to produce minimal diffs
+- quant.c now checks for integer overflow allocating its image data
+- i_readraw_wiol() now checks for image creation failure
+- i_readrgb_wiol() now checks for image creation failure
+- i_writergb_wiol() was an empty stub, it now pushes an error message
+  and explicitly returns failure.
+- i_readrgb_wiol() now sets i_format to rgb.
+- set i_format to raw when reading tga files and test for it
+- document i_format tag
+- some tests were using $Config{ivsize} when they should have been 
+  using $Config{intsize}
+  Resolves: https://rt.cpan.org/Ticket/Display.html?id=8645
+- tools/imager has been removed from the MANIFEST, it's way too late
+  to test/debug for 0.44.
+- image.h had no prototype for i_ft2_bbox_r() and it was being called
+  from Imager.xs
+- giflib 4.1.3 still doesn't have all the bugs fixed, update the notes
+  in README and in the buggy_giflib.txt file that t105gif.t produces
+- make the inclusion of NO_META dependent on the version of EU::MM.
+  I was going to include a META.yml but EU::MM's generation is too 
+  simplistic (and misses the leading document header too).  For now
+  I'll leave it out.
+- built 0.43_03 for testing
+
+0.44 Wed 15 Dec 2004
+- modify the default include directories list to include the location
+  FreeBSD keeps freetype1 headers after the freetype2 locations.
+  This ensures that the -I options are generated with freetype2
+  locations first, so that those directories are searched before
+  the freetype1 directories.  This prevents problems compiling
+  font.c on FreeBSD.
+  Resolves: http://rt-cpan.fsck.com/Ticket/Display.html?id=1723
+- finish off a sentence in the "Producing an image from a CGI script"
+  example in Imager::Files
+- method index didn't include errstr()
+- document that you don't want the FT2 freetype.h in the include path
+
+0.44_01 Tue 24 May 2005
+- the plugins Makefile has long produced an error after all tests were
+  complete on Win32, finally tracked down why
+- Makefile.PL now checks the directories specified by $Config{locincpth}
+  and $Config{loclibpth} for includes and libraries respectively.
+  Resolves: https://rt.cpan.org/Ticket/Display.html?id=2942
+- we were undefing the wrong macro (used as an include guard) when
+  building the error code translation function for freetype 2.  This
+  meant most errors came out as numbers.
+- add a note to the README on how to get font suitcases and dfont files
+  working on OS X.
+- add dfont to the list of extensions supported by ft2
+- document Imager::Font->new()'s index parameter
+- added concept index to Imager.pm's POD
+- the gradgen filter now does the same color value conversion that
+  Imager's drawing functions do.
+- added trivial multiple master support via the FT2 driver
+- added .pcf and .pcf.gz to the list of extensions supported by ft2
+- the tiff reader now puts warning messages produced during reading into
+  the i_warning tag.
+  Resolves: https://rt.cpan.org/Ticket/Display.html?id=8722
+- the i_xres and i_yres tags are now stored in a resolution similar
+  to their source.
+  Resolves: https://rt.cpan.org/Ticket/Display.html?id=8520
+- added tiff_resolutionunit_name tag when reading tiff files
+- Makefile.PL now attempts to use freetype-config to configure freetype 2
+  and pkg-config to configure libpng.
+- avoid complaining about include/lib directories we pull from 
+  perl's config or we have built-in
+- Makefile.PL now builds imconfig.h with #defines for libraries
+  present (and for the GIF library version) rather than putting them
+  into CFLAGS
+- scanning for required include files is now down by directory rather
+  than by file, using -e to check for the existence for a file rather than
+  doing an eq against every filename in the directory.
+- previously we only checked a candidate include directory for freetype.h
+  to consider it a valid FT1.x include directory.  We now check if it
+  contains fterrors.h too, if it does, then it's from a FT2 installation
+  and we ignore it.
+- Makefile.PL now accepts command-line options to set include and library
+  directories and to enable/disable drivers.
+- added simple examples to most of the filters documented in 
+  Imager::Filters
+- explicitly document there are no PNG specific tags.
+- more examples in Imager::Draw
+- minor cleanup of Imager::Fill
+- eliminate unused variables and static functions
+- simplify some XS code by adding another typemap entry
+- the right-side bearing used to adjust the final width wasn't being
+  calculated correctly, this would cause the bounding_box() function for 
+  freetype 2.x to return a larger than expected text width.
+  http://rt.cpan.org/NoAuth/Bug.html?id=11291
+- add scaleX/scaleY to the method index and gives them some examples
+  http://rt.cpan.org/NoAuth/Bug.html?id=11328
+- call read() instead of open() in the example code in Imager.pm,
+  and mention that open() is an alias for read().
+  http://rt.cpan.org/NoAuth/Bug.html?id=11431
+- added reference list of crop() parameters.
+  http://rt.cpan.org/NoAuth/Bug.html?id=11430
+- reading a tga image with an idstring of 128 or more bytes would result 
+  in an allocation error, if the platform char type was signed
+- tests now check that tga tags are set
+- calling the read() method for a format not included in the Imager build,
+  for example, JPEG with no libjpeg installed, would crash with an 
+  undefined function error (modified by DynaLoaders dependence on 
+  AutoLoader.)
+  http://rt.cpan.org/NoAuth/Bug.html?id=9618
+- some test scripts have been modified to use Test::More, which is now
+  included under the t directory.  Eventually all will be modified to use
+  Test::More and the duplicates in t/testtools.pl will be removed
+- the convert, crop, rotate, copy, matrix_transform, to_paletted, to_rgb8, 
+  scaleX and scaleY methods now warn when called in void context.
+  http://rt.cpan.org/NoAuth/Bug.html?id=9672
+- correct email addresses in the README file, and include bug reporting
+  information there too
+- added README for samples directory, describes interleave.pl and 
+  anaglyph.pl to start.
+- the XS for the internal i_glin() function wasn't copying the pixel
+  values across to the returned color objects.
+  http://rt.cpan.org/NoAuth/Bug.html?id=11860 
+- Imager::Cookbook wasn't included in the MANIFEST
+- added samp-form.cgi and samp-image.cgi to the samples directory to 
+  demonstrate displaying a generated image on a HTML page.
+- Makefile.PL now adds rules to generate a suitable META.yml to the
+  generated Makefile.
+- added sample code for handling images uploaded via a HTML form.
+- saving a GIMP gradiant file with Imager::Fountain->save has always been
+  broken.  Fixed it and added tests.
+- newer versions of GIMP add a line to gradient files before the
+  segment count giving a descriptive name of the gradient.  
+  Imager::Fountain can now read and write such gradient files.  The
+  interface is a bit indirect, but I'd like to preserve
+  Imager::Fountain as a blessed array ref for now.
+- the segments parameter supplied to the fountain filter and the
+  fountain fill contructor now accepts color names or other 
+  descriptions as other functions do.
+- fix a few compiler warnings
+- document the Imager::Font::BBox advance_width() method
+- Imager::Font::BBox advance_width() method was falling back to
+  the wrong value when the font driver's low level function
+  didn't return the advance width.
+- the FT 1.x was comparing versus an uninitialized variable when
+  checking the end of string when calculating the right side bearing
+  used to adjust pos_width for glyphs that overlap the right side of the
+  advance width.
+- Imager::Font::BBox objects now have right_bearing() and display_width()
+  methods.  Hopefully this and the advance_width() method fills out
+  the Imager bounding box interface to a useful state.
+  Implemented for all four font drivers.
+- Win32 font bounding_box() method now supports the advance width
+  and right bearing values.
+- Imager::Matrix2d->rotate() would only rotate around the supplied 
+  centre point if both 'x' and 'y' were non-zero.
+- the internal i_tags_get_string() function now acts correctly for
+  integer only tags.
+- the FT1.x driver now supports the align parameter correctly.
+  Tests were added to each driver to check correct handling of the align
+  parameter.
+- the Win32 font driver bounding_box() method now puts accurate values
+  in the ascent and descent values, previously they were set to the 
+  font ascent/descent rather than the values specific to the string.
+- supplying align=>0 to the win32 font driver string() function 
+  now aligns in the same way as the other drivers.
+- removed the bug reporting email address to prevent spammers stripping
+  it.  The URL is still there and if someone knows how rt.cpan.org works
+  they can still figure out the email.
+- the internal function used to probe file formats if the type
+  parameter wasn't passed to the read() method would produce
+  diagnostics on stdout, precluding use in web applications.  Silenced
+  it.
+- the setcolors() had a fencepost error making it impossible to 
+  use it to set the last color in the palette.
+  http://rt.cpan.org/NoAuth/Bug.html?id=12676
+- fix the filter examples in Imager::Filter so they don't indicate that 
+  a new image is returned (the filter() method works in-place)
+- add examples for the fountain filter
+- prevent warnings from Makefile.PL when there's no libraries found
+- Imager no longer assumes that MSVC is the only native Win32 
+  compiler, MinGW can be used to build Imager.
+- fixed an inverted condition checking the giflib version, and 
+  replaced a manual test skip in t/t105gif.t
+- add tests to exercise hatch fills for floating images.  This code is
+  mis-generated with the gcc 4.0 that ships with OS X 10.4
+- work around junk that pkg-config sends to stderr on FreeBSD 4.10
+- testimg/base.jpg was missing from the MANIFEST, causing test failures
+- use a temp file to avoid messing with echo on Win32 when building
+  META.yml
+- add some Mac OS X notes to the README
+
+0.45 Mon 30 May 2005
+- t/t105gif.t wasn't handling buggy giflibs correctly
+
+0.45_01 Mon 12 Dec 2005
+- give the colorcount() and maxcolors() methods their own entries and
+  add them to the method index.
+- added tiff_bitspersample and tiff_photometric tags to tiff images
+  when read
+- loading filter DLLs/DSOs had an off-by-one error allocating a buffer
+  for the filename of the library (does anyone use this functionality?)
+- remove old #if 0 code from Imager.xs
+- convert t/t15color.t to Test::More
+- prevent warnings when looking up a GIMP color with no palette
+  parameter and $ENV{HOME} not set.
+  Resolves: http://rt.cpan.org/NoAuth/Bug.html?id=13143
+- added VERSION numbers to most .pms
+- convert t/t104ppm.t to Test::More
+- convert t/t107bmp.t to Test::More
+- convert t/t108tga.t to Test::More
+- error messages generated reading JPEG or PNG images are now
+  available via errstr()
+- implement/test/document set_file_limits()/get_file_limits() methods,
+  which allow limits on the size of image files read.
+- new example for convert() method based on Leolo's query
+- implement getscanline(), setscanline() and getsamples() methods.
+  These are low level methods for fast access to image data, based on
+  existing C functions that Imager uses internally.
+- limit limits.c to C89
+- the gif tests weren't skipping enough when there was no gif support
+- move include t1lib out of image.h to font.c, since nothing it 
+  provides is needed elsewhere.
+- minor POD fixes
+- added a brief tutorial
+- Imager::Font->new() for the tt (Freetype 1.x) driver now correctly
+  handles errors from i_tt_new(), and passed error messages now 
+  generated by i_tt_new().
+  Resolves: http://rt.cpan.org/NoAuth/Bug.html?id=14804
+- renamed lib/Imager/Cookbook.pm to lib/Imager/Cookbook.pod - CPANTS
+  complains about it not having 'use strict;'
+- add samples/replace_color.pl
+- you can now supply a page parameter to read() to read a given page
+  from a TIFF file.
+- added samples/border.pl, and notes on adding a border in 
+  Imager::Cookbook.
+- added sampled/slant_text.pl, and notes on shearing/rotating text in
+  Imager::Cookbook.
+- INCOMPATIBLE CHANGE:
+  reading a gif file will now read the first image from the file rather 
+  than the a consolidated image.  If you want the old behaviour supply
+  C<< gif_consolidate=>1 >> to the read() method.  Older versions of 
+  Imager will accept this parameter and produce the same result.
+- you can now supply a page parameter to read() to read a given page
+  from a GIF file.
+- reading a multi-image GIF was leaking memory (a line buffer per file)
+- maxcolors now must be at least 1 when creating a paletted image.
+- converted t/t022double.t to use Test::More
+- t1 library re-initialization modified to support T1Lib 5.1.0
+- setmask() now returns true on success and reports a missing mask
+  parameter.
+- double per sample images were ignoring the channel mask.
+- converted t/t021sixteen.t to use Test::More
+- 16-bit per sample images were ignoring the channel mask
+- added t/t91pod.t
+- expand Imager::ImageTypes:
+  - make all methods into =items
+  - document parameters
+  - more examples
+  - add AUTHOR/REVISION/SEE ALSO
+- add samples/tk-photo.pl
+- fixes to verbose mode in Makefile.PL, also added a -v switch so you 
+  can enable it via the command-line
+  Resolves: http://rt.cpan.org/NoAuth/Bug.html?id=16094
+- arc(..., fill=> ...) wasn't handling concave areas correctly
+- arc(..., color=>...) wasn't properly filling it's area
+- added experimental antialiased support to arc()
+- the order of the returned values for Imager::Font's align() method
+  was incorrect.
+- check the correct directory when adding the cygwin Win32 API include
+  path (Makefile.PL).  This was a later response to #16094
+  Resolves: http://rt.cpan.org/NoAuth/Bug.html?id=16094
+- add --nolog command-line switch to Makefile.PL to disable logging
+- filled polygons using a complex fill with combine != 0 (none) didn't
+  correctly handle polygons that crossed a given scanline more than once.
+- the straight edges of filled arcs weren't being drawn correctly, 
+  causing minor artifacts at the inner and external corners
+- implemented valign=>'end' for Imager::Font->align
+- added $img->align_string() as a way to call Imager::Font->align
+- added samples/align-string.pl
+- improved missing argument handling a little for the string() method
+- linkify Imager.pm a bit more
+- expand Imager::Draw:
+  - make all methods items
+  - document parameters
+  - more examples
+  - add AUTHOR, REVISION.
+- add smoke test for nearest_color filter
+- added integer overflow checks to many memory allocation calls
+- added experimental EXIF decoding when reading JPEG files.
+- read/write i_xres, i_yres, i_aspect only tage with JPEG files,
+  and read/write jpeg_density_unit (+_name) tag
+- save the jpeg_comment tag when writing
+- the has_chars() method now checks the font objects utf8 flag as well 
+  as the utf8 parameter.
+- clean up Imager::Font documentation:
+   - string now documented in Imager::Draw
+   - add parameter list documentation
+- document the utf8 parameter for bounding_box(), has_chars()
+  Resolves: http://rt.cpan.org/NoAuth/Bug.html?id=13508
+- decode the EXIF GPS IFD as well
+- minor documentation touchups
+- bump version 0.45_01
+
+0.45_02 Mon 12 Dec 2005
+- some test scripts weren't fixing @INC correctly
+- t/t101jpeg.t wasn't skipping enough when there was no jpeg support
+- bump version to 0.45_02
+
+0.46 Tue 20 Dec 2005
+- change the use in t/t91.pod to require version 1.00 of Test::Pod  
+- minor changes to Imager::Transformations
+- bump version to 0.46
+
+0.46_01 Fri 30 Dec 2005
+- switched to subversion - changed $VERSION that was based on Revision
+  tag to be manually handled.
+- outputting a single space using the Freetype 1.x driver (type=>'tt')
+  was producing a divide by zero error.
+- bump to 0.46_01 for testing
+
+0.47 Fri 30 Dec 2005
+- bump to 0.47
+
+0.47_01 Tue 21 Feb 2006
+- set the locale to "C" properly when testing ft1.x error messages
+- don't destroy image before creating it in error handling in bmp.c
+- extra concept index entries
+- Imager::Draw - align_string()'s valign parameter was invalid in the 
+  synopsis
+- start of external Imager API access:
+  - rename headers to avoid conflicts:
+    - image.h to imager.h
+    - imagei.h to imageri.h
+    - datatypes.h to imdatatypes.h
+    - config.h to imconfig.h (created by Makefile.PL)
+  - moved all public types defined in imager.h to imdatatypes.h
+  - supply the PM parameter to WriteMakefile(), to install headers 
+    under Imager/include, and the Imager typemap in Imager/typemap.
+    We scan the MANIFEST for files to add to PM.
+  - add "i_" prefix on some functions useful as public at the C level.
+  - moved the typedefs that support the typemap from Imager.xs to 
+    imperl.h
+  - set the global callbacks hook in the Imager.xs BOOT section
+  - API cleanup:
+    - define i_tags_set(), i_tags_setn() - we might not allow multiple 
+      values for a tag in the future
+    - i_copy() now returns a new image instead of doing horrible inplace
+      things to an existing image
+    - provide actual functions for all of the macros we define in imager.h
+      so we can put them in the global callbacks structure
+  - define global functions structure (imexttypes.h)
+    and initialize it (imext.c)
+  - add API include header with macros to setup the define and
+    initialize the local callbacks pointer, and macros to call the API
+    functions.
+  - build Imager::APIRef from C sources, including updating the sources
+    to include documentation for each API function.
+  - convert dyntest and mandelbrot dynfilts into XS modules (too easy)
+  - simple Imager::CountColor example
+- support Inline::C :
+  - typemap changes to accept Imager or Imager::ImgRaw objects as 
+    image parameters
+  - define Imager output type for trivial cases of returning an i_img as
+    a full Imager object
+  - Inline WITH hook to filter Imager XS types into types Inline::C can
+    accept, supply appropriate headers and initialization.
+  - test script t/t82inline.t
+- try to use XSLoader instead of DynaLoader (but fallback if necessary)
+- paste() can now paste a subset of the source image.
+- paste() now has better tests
+- paste() should now be faster for larger pastes
+- added sample files missing from MANIFEST
+- added t/t92samples.t to check samples/README against MANIFEST
+- added inline_replace_color.pl to samples
+- constify the Imager API
+- document Imager::Filter::Mandelbrot
+- convert dynfilt/flines.c to Imager::Filter::Flines
+- minor changes for older perl/ExtUtils::MM
+- deal with freetype-config --cflags returning the directories
+  in the wrong order (Freetype 2.1.4 and earlier)
+  Thanks to David Wheeler for his help in tracking this down.
+- reword and provide an example for non-proportionally scaling an
+  image.  Wording from Simon Cozens.
+- error messages when writing TIFF images were always 
+  'Could not write to buffer', more useful messages are now reported.
+- error messages when writing PNM images were always
+  'unable to write pnm image', more useful messages are now reported.
+- convert t/t103raw.t to Test::More
+- reading a raw image no longer exits on a short read or read error,
+  and returns an appropriate error message in $im->errstr
+- write failures when writing a raw image now return a useful
+  message in $im->errstr
+- added typemap type names to types in Imager::API.
+- make skip when Inline::C not available less verbose
+- convert t/t07iolayer.t to Test::More
+- handle the possibility of strerror() returning NULL.
+- supply C<imager> parameter to filters so we can register filters
+  implemented in perl.
+- document register_filter() and add test for it
+- add example to SYNOPSIS of samples/inline_replace_color.pl
+- minor POD fix in Imager::Color::Table
+- eliminate many -Wall warnings
+- update README to match unbuggy giflib
+- document index parameter of Imager::Font->new()
+- change faxable output to use a more fax natural PHOTOMETRIC_MINISWHITE, 
+  since T.4 normally works that way, and MINISBLACK confuses some readers.
+- clean up scale() method for readability
+- make scale() fail if an invalid type is supplied (previously
+  documented as undefined behaviour)
+- add error handling tests for scale()
+- smarter warning removal
+- handle effects of byte ordering when testing tiff error messages
+- scale() can now expect an Image::Math::Constrain object as a scaling
+  constraint via the constrain parameter.
+- added tests for the various ways we can specify scaling size
+- documented scale()'s scalefactor parameter
+- sick of $opts{scalefactor} in scale(), give it a scalar to call it's
+  own.
+- check $Config{ldflags} and $Config{ccflags} for places to search for
+  headers and libraries.  This deals with the way the fink build of perl
+  puts -L/sw/lib in ldflags rather than using loclibpth
+- eliminate some of the duplication of -I and -L options in LIBS and INC
+- Makefile.PL now uses strict.
+- the search for freetype1.x headers is now smarter
+- add tests for scaleX()/scaleY()
+- expand documentation of scaleX()/scaleY()
+- rotate()s back parameter now accepts color names like other methods
+- convert t/t69rubthru.t to Test::More
+- minor clean up of rubthrough() method
+- error handling tests for rubthrough()
+- expand Imager::Transformations:
+  - document parameters more explicitly
+  - document return values
+  - add examples
+  - add AUTHOR, SEE ALSO, REVISION
+- eliminate sign warning from image.c
+- make TIFF detection stricter
+- more memory allocation integer overflow auditing
+- IM_DEBUG_MALLOC wasn't interacting well with the API
+- make win32.c const happy
+- make raw.c C89 compliant
+- added version/level to the API function table structure
+- fix/simplify META.yml generation - we now generate META.yml at
+  Makefile.PL time, since trying to work with EU::MM to generate a 
+  custom META.yml was a waste.
+- bump to 0.47_01
+
+0.48 Fri 3 Mar 2006
+- removed unused hashinfo() function from Imager.xs
+- added =items for various methods, so Pod::Coverage will pick them up
+  (Pod::Coverage tests to be added in 0.49)
+- bump to 0.48
+
+0.49
+- handle short EXIF user_comment fields correctly, previously Imager
+  would read (and potentially) write beyond the end of an allocated block,
+  or through a NULL pointer if the EXIF user_comment field was less
+  than 8 bytes long.
+  https://rt.cpan.org/Ticket/Display.html?id=17981
+- tifflib 3.8.0 with MDI (Microsoft(tm) TIFF) support produces a 
+  different error when it reads a file with a bad magic number.
+  Update the test to handle the possible messages.
+- some jpeg.c logging calls didn't include parameters enough to match
+  the supplied format string. (detected by valgrind)
+- in some cases memory wasn't being freed during error handling when
+  reading jpeg images (detected by valgrind)
+- free the TIFF object correctly when reading a TIFF image and the 
+  page number is out of range. (detected by valgrind)
+- i_gsampf() (used to implement getsamples() for floating point samples)
+  was leaking memory. (detected by valgrind)
+- writing to a PNG file was leaking one memory block
+  (detected by valgrind)
+- some error paths when reading GIF images weren't closing the GIF
+  read object. (detected by valgrind)
+- bump to 0.49 (to get #17981 fix out)
+
+=================================================================
+
+        For latest versions check the Imager-devel pages:
+        http://imager.perl.org/
+
+=================================================================
+

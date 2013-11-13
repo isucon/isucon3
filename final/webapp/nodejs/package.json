@@ -1,0 +1,16 @@
+{
+  "name": "isucon3final",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node server"
+  },
+  "engines": {
+    "node": ">=0.10.19"
+  },
+  "dependencies": {
+    "express": "3.4.0",
+    "mysql": "0.9.6",
+    "temp": "0.6.0"
+  }
+}

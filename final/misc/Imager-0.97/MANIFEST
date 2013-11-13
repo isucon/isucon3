@@ -1,0 +1,526 @@
+adobe.txt			License for makeblended font
+apidocs.perl			Build lib/Imager/APIRef.pm
+bigtest.perl			Library selection tester
+bmp.c				Reading and writing Windows BMP files
+Changes
+Changes.old			Old changes
+color.c				Color translation and handling
+combine.im			Channel combine
+compose.im
+context.c
+conv.im
+convert.im
+CountColor/CountColor.pm	sample XS access to API
+CountColor/CountColor.xs
+CountColor/Makefile.PL
+CountColor/t/t00countcolor.t
+datatypes.c
+doco.perl
+draw.c
+draw.h
+dynaload.c
+dynaload.h
+dynfilt/compile.txt
+dynfilt/dt2.c
+dynfilt/dt2.exp
+dynfilt/dyntest.c
+dynfilt/dyntest.exp
+dynfilt/flines.c
+dynfilt/flines.exp
+dynfilt/Makefile.PL
+dynfilt/mandelbrot.c
+dynfilt/mandelbrot.exp
+dynfilt/pluginst.h
+dynfilt/t/t60dyntest.t		Simple test script
+DynTest/DynTest.pm		simple conversion of the dyntest sample from dynfilt/
+DynTest/DynTest.xs
+DynTest/linstretch.c
+DynTest/Makefile.PL
+DynTest/t/t00dyntest.t
+errep.perl
+error.c
+ext.h
+feat.c
+feat.h
+fills.c				Generic fills
+filterlist.perl
+filters.im
+Flines/Flines.pm
+Flines/Flines.xs
+Flines/Makefile.PL
+Flines/t/t00flines.t
+flip.im
+fontfiles/dodge.ttf
+fontfiles/ExistenceTest.ttf	generated using pfaedit
+fontfiles/ImUgly.ttf
+fontfiles/NameTest.ttf		test glyph_names() - see FT2/t/t10ft2.t
+fontft1.c
+FT2/fontfiles/dodge.ttf
+FT2/fontfiles/ExistenceTest.afm
+FT2/fontfiles/ExistenceTest.pfb
+FT2/fontfiles/ExistenceTest.ttf
+FT2/fontfiles/ImUgly.ttf
+FT2/fontfiles/MMOne.pfb		multiple master test font
+FT2/fontfiles/NameTest.ttf
+FT2/freetyp2.c			Implements freetype2 font support
+FT2/FT2.pm
+FT2/FT2.xs
+FT2/imft2.h
+FT2/Makefile.PL
+FT2/README
+FT2/t/t10ft2.t
+FT2/t/t20thread.t
+FT2/t/t90std.t			Standard font tests for FT2
+FT2/typemap
+gaussian.im
+GIF/GIF.pm
+GIF/GIF.xs
+GIF/imgif.c
+GIF/imgif.h
+GIF/Makefile.PL
+GIF/README
+GIF/t/t10gif.t
+GIF/t/t20new.t
+GIF/t/t30fixed.t
+GIF/t/t40limit.t
+GIF/t/t50header.t
+GIF/testimg/badindex.gif	GIF with a bad color index
+GIF/testimg/bandw.gif
+GIF/testimg/expected.gif
+GIF/testimg/loccmap.gif
+GIF/testimg/nocmap.gif
+GIF/testimg/scale.gif
+GIF/testimg/scalei.gif
+GIF/testimg/screen2.gif
+GIF/testimg/screen3.gif
+GIF/testimg/trimgdesc.gif
+GIF/testimg/trmiddesc.gif
+GIF/testimg/zerocomm.gif	Image with a zero-length comment extension
+hlines.c			Manage sets of horizontal line segments
+ICO/ICO.pm			Windows Icon file support
+ICO/ICO.xs
+ICO/imicon.c
+ICO/imicon.h
+ICO/lib/Imager/File/CUR.pm
+ICO/Makefile.PL
+ICO/msicon.c
+ICO/msicon.h
+ICO/t/t10icon.t
+ICO/t/t20readone.t
+ICO/t/t21readmult.t
+ICO/t/t30cursor.t
+ICO/t/t40readcurone.t
+ICO/t/t41curmultread.t
+ICO/t/t50readfail.t
+ICO/t/t60writefail.t
+ICO/t/t70icosing.t
+ICO/t/t71icomult.t
+ICO/t/t72cursing.t
+ICO/t/t73curmult.t
+ICO/testimg/combo.ico
+ICO/testimg/pal13232.ico
+ICO/testimg/pal256.ico
+ICO/testimg/pal43232.cur
+ICO/testimg/pal43232.ico
+ICO/testimg/pal43232.ppm
+ICO/testimg/pal83232.ico
+ICO/testimg/pal83232.ppm
+ICO/testimg/rgb1616.ico
+ICO/testimg/rgba3232.ico
+ICO/testimg/rgba3232.ppm
+image.c
+imager.h
+Imager.pm
+Imager.xs
+imageri.h
+imdatatypes.h
+imerror.h			Error handling functions
+imext.c				Defines the function table
+imext.h				Included by external modules for API access
+imextdef.h
+imextpl.h			Included by external modules for Perl API access
+imextpltypes.h			Define Perl API function table type
+imexttypes.h			Define API function table type
+img16.c				Implements 16-bit/sample images
+img8.c				Implements 8-bit/sample images
+imgdouble.c			Implements double/sample images
+imio.h
+immacros.h
+imperl.h
+imperlio.h
+imrender.h			Buffer rending engine function declarations
+inc/Devel/CheckLib.pm		David Cantrell's Devel::CheckLib
+io.c
+iolayer.c
+iolayer.h
+iolayert.h			IO layer types
+JPEG/imexif.c			Experimental JPEG EXIF decoding
+JPEG/imexif.h
+JPEG/imjpeg.c
+JPEG/imjpeg.h
+JPEG/JPEG.pm
+JPEG/JPEG.xs
+JPEG/Makefile.PL
+JPEG/README
+JPEG/t/t00load.t
+JPEG/t/t10jpeg.t		Test jpeg support
+JPEG/t/t20limit.t
+JPEG/testimg/209_yonge.jpg	Regression test: #17981
+JPEG/testimg/exiftest.jpg	Test image for EXIF parsing
+JPEG/testimg/scmyk.jpg		Simple CMYK JPEG image
+JPEG/testimg/zerotype.jpg	Image with a zero type entry in the EXIF data
+lib/Imager/API.pod
+lib/Imager/APIRef.pod		API function reference
+lib/Imager/Color.pm
+lib/Imager/Color/Float.pm
+lib/Imager/Color/Table.pm
+lib/Imager/Cookbook.pod
+lib/Imager/Draw.pod
+lib/Imager/Engines.pod
+lib/Imager/Expr.pm
+lib/Imager/Expr/Assem.pm
+lib/Imager/ExtUtils.pm
+lib/Imager/Files.pod
+lib/Imager/Fill.pm
+lib/Imager/Filters.pod
+lib/Imager/Font.pm
+lib/Imager/Font/BBox.pm
+lib/Imager/Font/FreeType2.pm
+lib/Imager/Font/Image.pm
+lib/Imager/Font/Test.pm		Font for testing (outputs boxes only)
+lib/Imager/Font/Truetype.pm
+lib/Imager/Font/Type1.pm	Compatibility wrapper for Imager::Font::T1
+lib/Imager/Font/Wrap.pm
+lib/Imager/Fountain.pm
+lib/Imager/Handy.pod
+lib/Imager/ImageTypes.pod
+lib/Imager/Inline.pod		Using Imager with Inline::C
+lib/Imager/Install.pod		Installation notes
+lib/Imager/interface.pod
+lib/Imager/IO.pod		Document Imager::IO objects
+lib/Imager/LargeSamples.pod	Track large sample support
+lib/Imager/Matrix2d.pm
+lib/Imager/Preprocess.pm
+lib/Imager/Probe.pm		Library probes
+lib/Imager/regmach.pod
+lib/Imager/Regops.pm
+lib/Imager/Security.pod
+lib/Imager/Test.pm
+lib/Imager/Threads.pod
+lib/Imager/Transform.pm
+lib/Imager/Transformations.pod
+lib/Imager/Tutorial.pod
+limits.c
+log.c
+log.h
+Makefile.PL
+Mandelbrot/Makefile.PL		more complex filter
+Mandelbrot/mandel.c
+Mandelbrot/Mandelbrot.pm
+Mandelbrot/Mandelbrot.xs
+Mandelbrot/t/t00mandel.t
+MANIFEST
+MANIFEST.SKIP
+map.c
+maskimg.c
+mutexnull.c
+mutexpthr.c
+mutexwin.c
+palimg.c
+paste.im
+perlio.c
+plug.h
+PNG/impng.c
+PNG/impng.h
+PNG/Makefile.PL
+PNG/PNG.pm
+PNG/PNG.xs
+PNG/README
+PNG/t/00load.t
+PNG/t/10png.t			Test png support
+PNG/testimg/badcrc.png
+PNG/testimg/bilevel.png
+PNG/testimg/comment.png
+PNG/testimg/cover.png
+PNG/testimg/cover16.png
+PNG/testimg/cover16i.png
+PNG/testimg/coveri.png
+PNG/testimg/coverpal.png
+PNG/testimg/coverpali.png
+PNG/testimg/gray.png
+PNG/testimg/graya.png
+PNG/testimg/pal.png
+PNG/testimg/palette.png
+PNG/testimg/palette_out.png
+PNG/testimg/paltrans.png
+PNG/testimg/rgb16.png
+PNG/testimg/rgb8.png
+PNG/testimg/rgb8i.png
+pnm.c
+polygon.c
+ppport.h
+quant.c
+raw.c
+README
+regmach.c
+regmach.h
+regops.perl
+render.im
+rendert.h			Buffer rendering engine types
+rotate.im
+rubthru.im
+samples/align-string.pl		Demonstrate align_string method.
+samples/anaglyph.pl
+samples/border.pl		Demonstrate adding a border
+samples/drop_shadow.pl		Draw a drop shadow or glow
+samples/flasher.pl		Animate an source image fading to a color and back
+samples/gifscale.pl		Scale an animated GIF, preserving animation info
+samples/inline_capture2image.pl	convert captured BGR data to an image
+samples/inline_replace_color.pl	replace colors using Inline::C
+samples/interleave.pl
+samples/quad_to_square.pl	Transform a quadrilateral into a square
+samples/README
+samples/replace_color.pl	replace colors using transform2()
+samples/samp-form.cgi
+samples/samp-image.cgi
+samples/samp-scale.cgi		Demonstrate image upload via a HTML form
+samples/samp-scale.html		Form for samp-scale.cgi
+samples/samp-tags.cgi		Demonstrate image upload via a HTML form
+samples/samp-tags.html		Form for samp-tags.cgi
+samples/slant_text.pl		Using $font->transform() to slant text
+samples/tk-photo.pl
+samples/wiggle.pl		"Wiggle" stereoscopy
+scale.im			Newer scaling code
+SGI/imsgi.c
+SGI/imsgi.h
+SGI/Makefile.PL
+SGI/SGI.pm
+SGI/SGI.xs
+SGI/t/00load.t
+SGI/t/10read.t
+SGI/t/20write.t
+SGI/t/30limit.t			Test size limit checking
+SGI/testimg/rle.rgb
+SGI/testimg/rle12.rgb
+SGI/testimg/rle16.rgb
+SGI/testimg/rle6.rgb
+SGI/testimg/rleagr.rgb
+SGI/testimg/verb.rgb
+SGI/testimg/verb12.rgb
+SGI/testimg/verb16.rgb
+SGI/testimg/verb6.rgb
+spot.perl			For making an ordered dither matrix from a spot function
+stackmach.c
+stackmach.h
+t/000-load.t			Test Imager modules can be loaded
+t/100-base/010-introvert.t	Test image inspection
+t/100-base/020-color.t		Test Imager::Color
+t/100-base/030-countc.t		Test getcolorcount() etc
+t/100-base/800-tr18561.t	Regression test for RT #18561
+t/100-base/801-tr18561b.t	Regression test for RT #18561
+t/150-type/020-sixteen.t	Test 16-bit/sample images
+t/150-type/030-double.t		Test double/sample images
+t/150-type/040-palette.t	Test paletted images
+t/150-type/100-masked.t		Test masked images
+t/200-file/010-iolayer.t	Test Imager I/O layer objects
+t/200-file/100-files.t		Format independent file tests
+t/200-file/200-nojpeg.t		Test handling when jpeg not available
+t/200-file/210-nopng.t		Test handling when png not available
+t/200-file/220-nogif.t		Test handling when gif not available
+t/200-file/230-notiff.t		Test handling when tiff not available
+t/200-file/300-raw.t		Test raw file handling
+t/200-file/310-pnm.t		Test PNM file handling
+t/200-file/320-bmp.t		Test BMP file handling
+t/200-file/330-tga.t		Test TGA file handling
+t/200-file/400-basic.t		Test basic operations across file formats
+t/250-draw/010-draw.t		Basic drawing tests
+t/250-draw/020-flood.t		Flood fill tests
+t/250-draw/030-paste.t		Test the paste() method
+t/250-draw/040-rubthru.t	Test the rubthrough() method
+t/250-draw/050-polyaa.t		polygon()
+t/250-draw/100-fill.t		fills
+t/250-draw/200-compose.t	compose()
+t/300-transform/010-scale.t	scale(), scaleX() and scaleY()
+t/300-transform/020-combine.t	Test combine() method
+t/300-transform/030-copyflip.t	Test copy, flip, rotate, matrix_transform
+t/300-transform/040-crop.t
+t/300-transform/050-convert.t
+t/300-transform/060-map.t
+t/300-transform/500-trans.t	transform()
+t/300-transform/600-trans2.t	transform2() using RPN
+t/300-transform/610-postfix.t	more transform2() using RPN
+t/300-transform/620-infix.t	transform2() using infix
+t/300-transform/630-assem.t	transform2() using assembler
+t/350-font/010-font.t		General font interface tests
+t/350-font/020-tt.t		low level FT1 tests
+t/350-font/030-ttoo.t		OO level FT1 tests
+t/350-font/040-ttstd.t		Standard font tests for TT
+t/350-font/100-texttools.t	Test text wrapping
+t/400-filter/010-filters.t	Consolidated filter tests (needs to split)
+t/450-api/100-inline.t		Inline::C integration and API
+t/450-api/110-inlinectx.t	context APIs
+t/850-thread/010-base.t		Test wrt to perl threads
+t/850-thread/100-error.t	error stack handling with threads
+t/850-thread/110-log.t		log handling with threads
+t/900-util/010-test.t		Test Imager::Test
+t/900-util/020-error.t		Error stack
+t/900-util/030-log.t		log
+t/900-util/040-limit.t		file size limits
+t/900-util/050-matrix.t		Imager::Matrix2d
+t/900-util/060-extutil.t	Imager::ExtUtils
+t/900-util/060-hlines.t		hlines.c internal API
+t/950-kwalitee/010-pod.t	Test POD with Test::Pod
+t/950-kwalitee/020-samples.t	Check samples are in samples/README
+t/950-kwalitee/030-podcover.t	POD Coverage tests
+t/950-kwalitee/040-strict.t	Check use strict is usede
+t/950-kwalitee/050-meta.t	Check META.yml is valid
+t/950-kwalitee/060-podstruct.t
+t/GoodTestFont.pm		A dummy (hardly implemented) font driver.
+t/Pod/Coverage/Imager.pm
+t/t1000lib/Imager/File/BAD.pm	Test failing to load a file handler
+T1/fontfiles/dcr10.afm
+T1/fontfiles/dcr10.pfb
+T1/fontfiles/ExistenceTest.afm	please edit ExistenceTest.sfd in CVS
+T1/fontfiles/ExistenceTest.pfb	to change these files, edited and
+T1/fontfiles/SpaceTest.afm	test bounding box with spaces in t10type1.t
+T1/fontfiles/SpaceTest.pfb
+T1/imt1.c
+T1/imt1.h
+T1/Makefile.PL
+T1/README
+T1/t/t10type1.t
+T1/t/t20oo.t
+T1/t/t30thread.t
+T1/t/t90std.t			Standard font tests for T1
+T1/T1.pm
+T1/T1.xs
+T1/typemap
+tags.c
+testimg/alpha16.tga		16-bit/pixel TGA with alpha "channel" RT 32926
+testimg/bad1oflow.bmp		1-bit/pixel, overflow integer on 32-bit machines
+testimg/bad1wid0.bmp		1-bit/pixel, zero width
+testimg/bad24comp.bmp		24-bit/pixel, bad compression
+testimg/bad24oflow.bmp		24-bit/pixel, overflow integer on 32-bit machines
+testimg/bad24wid0.bmp		24-bit/pixel, 0 width
+testimg/bad4oflow.bmp		4-bit/pixel, overflow integer on 32-bit machines
+testimg/bad4wid0.bmp		4-bit/pixel, 0 width
+testimg/bad4widbig.bmp		4-bit/pixel, large width
+testimg/bad8comp.bmp		8-bit/pixel, bad compression
+testimg/bad8oflow.bmp		8-bit/pixel, overflow integer on 32-bit machines
+testimg/bad8useda.bmp		8-bit/pixel, bad colors used value
+testimg/bad8wid0.bmp		8-bit/pixel, width 0
+testimg/bad_asc.pbm		ASCII PBM with invalid image data
+testimg/bad_asc.pgm		ASCII PGM with invalid image data
+testimg/bad_asc.ppm		ASCII PPM with invalid image data
+testimg/badbits.bmp		bad bits value in header
+testimg/badcomp1.bmp		bad compression for 1-bit/pixel
+testimg/badcomp4.bmp		bad compression for 4-bit/pixel
+testimg/badplanes.bmp		bad planes value in header
+testimg/badused1.bmp		1-bit/pixel, out of range colors used value
+testimg/badused4a.bmp		4-bit/pixel, badly out of range used value (SEGV test)
+testimg/badused4b.bmp		4-bit/pixel, just out of range used value (SEGV test)
+testimg/base.jpg		Base JPEG test image
+testimg/comp4.bmp		Compressed 4-bit/pixel BMP
+testimg/comp8.bmp		Compressed 8-bit/pixel BMP
+testimg/filltest.ppm		Test for flood fills
+testimg/gimpgrad		A GIMP gradient file
+testimg/gradbad.ggr		A bad GIMP gradient file (bad seg count)
+testimg/gradbad2.ggr		A bad GIMP gradient file (bad segment)
+testimg/imager.pbm		Test bi-level
+testimg/junk.ppm
+testimg/longid.tga		Test TGA with a long id string
+testimg/maxval.ppm		For ppm file maxval handling
+testimg/maxval_0.ppm
+testimg/maxval_256.ppm
+testimg/maxval_4095_asc.ppm
+testimg/maxval_65536.ppm
+testimg/maxval_asc.ppm
+testimg/multiple.ppm		Test multiple PPM reading
+testimg/newgimpgrad.ggr		Test GIMP Gradient file (newer type)
+testimg/penguin-base.ppm
+testimg/pgm.pgm			Simple pgm for testing the right sample is in the right place
+testimg/scale.ppm
+testimg/short1.bmp		1-bit/pixel, data missing from EOF
+testimg/short24.bmp		24-bit/pixel, data missing from EOF
+testimg/short4.bmp		truncated 4bit/pixel uncompressed BMP
+testimg/short4rle.bmp		truncated 4bit/pixel compressed BMP
+testimg/short8.bmp		8-bit/pixel, data missing from EOF
+testimg/short8rle.bmp		8-bit/pixel compressed, data missing from EOF
+testimg/short_asc.pbm		ASCII PBM with short image section
+testimg/short_asc.pgm		ASCII PGM with short image section
+testimg/short_asc.ppm		ASCII PPM with short image section
+testimg/short_bin.pbm		Bin PBM with short image section
+testimg/short_bin.pgm		Bin PGM with short image section
+testimg/short_bin.ppm		Bin PPM with short image section
+testimg/short_bin16.pgm		16-bit Bin PGM with short image section
+testimg/short_bin16.ppm		16-bit Bin PPM with short image section
+testimg/simple.pbm
+testimg/test.png		Standard test image as PNG
+testimg/test.raw		Standard test image as RAW
+testimg/test.tga		Standard test image as TGA
+testimg/test_gimp_pal		A simple GIMP palette file
+testimg/tootall.ppm
+testimg/toowide.ppm
+testimg/winrgb2.bmp		1-bit bmp base
+testimg/winrgb24.bmp		24-bit bmp base
+testimg/winrgb24off.bmp		24-bit bmp with image data offset from header
+testimg/winrgb2off.bmp		1-bit bmp with image data offset from header
+testimg/winrgb4.bmp		4-bit bmp base
+testimg/winrgb4off.bmp		4-bit bmp with image data offset from header
+testimg/winrgb8.bmp		8-bit bmp base
+testimg/winrgb8off.bmp		8-bit bmp with image data offset from header
+tga.c				Reading and writing Targa files
+TIFF/imtiff.c
+TIFF/imtiff.h
+TIFF/Makefile.PL
+TIFF/README
+TIFF/t/t10tiff.t		Test tiff support
+TIFF/testimg/alpha.tif		Alpha scaling test image
+TIFF/testimg/comp4.bmp		Compressed 4-bit/pixel BMP
+TIFF/testimg/comp4.tif		4-bit/pixel paletted TIFF
+TIFF/testimg/comp4bad.tif	corrupted 4-bit/pixel paletted TIFF
+TIFF/testimg/comp4t.tif		4-bit/pixel paletted TIFF (tiled)
+TIFF/testimg/comp8.bmp		Compressed 8-bit/pixel BMP
+TIFF/testimg/comp8.tif		8-bit/pixel paletted TIFF
+TIFF/testimg/gralpha.tif	Grey alpha test image
+TIFF/testimg/grey16.tif		16-bit/sample greyscale TIFF
+TIFF/testimg/grey16sg.tif	signed 16-bit/sample greyscale TIFF
+TIFF/testimg/grey32.tif		32-bit/sample greyscale+alpha TIFF
+TIFF/testimg/imager.pbm		Test bi-level
+TIFF/testimg/imager.tif		Test bi-level
+TIFF/testimg/pengtile.tif	Tiled tiff image, same as penguin-base.ppm
+TIFF/testimg/penguin-base.ppm
+TIFF/testimg/rgb16.tif		16-bit/sample RGB image - strips
+TIFF/testimg/rgb16t.tif		16-bit/sample RGB image - tiled
+TIFF/testimg/rgbatsep.tif	Tiled/separated for testing RGBA codepath
+TIFF/testimg/scmyk.tif		Simple CMYK TIFF image
+TIFF/testimg/scmyka.tif		CMYK with one alpha channel
+TIFF/testimg/scmyka16.tif	CMYK with one alpha channel (16-bit)
+TIFF/testimg/scmykaa.tif	CMYK with 2 alpha channels
+TIFF/testimg/slab.tif		Lab color image
+TIFF/testimg/srgb.tif		Simple RGB image
+TIFF/testimg/srgba.tif		RGB with one alpha
+TIFF/testimg/srgba16.tif
+TIFF/testimg/srgba32.tif
+TIFF/testimg/srgba32f.tif	floating point sample RGBA
+TIFF/testimg/srgbaa.tif		RGB with 2 alpha
+TIFF/testimg/tiffwarn.tif	Generates a warning while being read
+TIFF/TIFF.pm
+TIFF/TIFF.xs
+trans2.c
+transform.perl			Shell interface to Imager::Transform
+typemap
+typemap.local			typemap for Imager.xs specific definitions
+typemap.oldperl			typemap for older versions of perl
+W32/fontfiles/ExistenceTest.ttf
+W32/imw32.h
+W32/lib/Imager/Font/Win32.pm
+W32/Makefile.PL
+W32/README
+W32/t/t10win32.t		Tests Win32 GDI font support
+W32/t/t90std.t			Standard font tests for W32
+W32/W32.pm
+W32/W32.xs
+W32/win32.c			Implements font support through Win32 GDI
+META.yml                                 Module YAML meta-data (added by MakeMaker)
+META.json                                Module JSON meta-data (added by MakeMaker)

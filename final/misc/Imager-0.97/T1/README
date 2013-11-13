@@ -1,0 +1,18 @@
+Imager::Font::T1 provides Type 1 font support for Imager via T1Lib.
+
+  http://imager.perl.org/
+  http://www.t1lib.org/
+
+This requires that t1lib is installed, including any development files.
+
+For Linux distributions this typically requires installation of the
+associated -dev or -devel package.
+
+See Imager::Install for more information.
+
+Imager::Font::T1 is shipped as part of Imager, but if the libraries
+required aren't found it won't be installed.  If you require T1
+support via libt1 then add a dependency on Imager::Font::T1.
+
+Imager::Font::FT2 provides most of the functionality of
+Imager::Font::T1 and more.

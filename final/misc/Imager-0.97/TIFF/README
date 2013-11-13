@@ -1,0 +1,14 @@
+Imager::File::TIFF provides TIFF file format support for Imager.
+
+It requires libtiff to be installed, including development files.
+
+For Linux distributions this typically requires installation of the
+associated -dev or -devel package.
+
+See Imager::Install for more information.
+
+This is currently shipped as part of Imager, but Imager may install
+with out installing Imager::File::TIFF, so if you need TIFF support,
+add a dependency on Imager::File::TIFF.
+
+Makefile.PL will reject libtiff 3.9.0 due to a bug in that release.

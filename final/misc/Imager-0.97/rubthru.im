@@ -1,0 +1,209 @@
+#include "imager.h"
+
+static int
+rubthru_targ_noalpha(i_img *im, i_img *src,
+                     i_img_dim tx, i_img_dim ty, 
+                     i_img_dim src_minx, i_img_dim src_miny,
+                     i_img_dim src_maxx, i_img_dim src_maxy) {
+  i_img_dim x, y, tty;
+  int alphachan;
+  int ch;
+  i_img_dim width = src_maxx - src_minx;
+  int want_channels;
+
+  i_clear_error();
+
+  if (im->channels == 3 && (src->channels == 4 || src->channels == 2)) {
+    want_channels = 4;
+    alphachan = 3;
+  }
+  else if (im->channels == 1 && (src->channels == 4 || src->channels == 2)) {
+    want_channels = 2;
+    alphachan = 1;
+  }
+  else {
+    i_copyto(im, src, src_minx, src_miny, src_maxx, src_maxy, tx, ty);
+    return 1;
+  }
+
+#code im->bits <= 8 && src->bits <= 8
+  IM_WORK_T alpha;
+  IM_COLOR *src_line, *dest_line;
+  
+  src_line = mymalloc(sizeof(IM_COLOR) * width);
+  dest_line = mymalloc(sizeof(IM_COLOR) * width);
+
+  tty = ty;
+  for(y = src_miny; y < src_maxy; y++) {
+    IM_COLOR *srcp = src_line;
+    IM_COLOR *destp = dest_line;
+    IM_GLIN(src, src_minx, src_maxx, y, src_line);
+    IM_GLIN(im, tx, tx + width, tty, dest_line);
+    if (src->channels != want_channels)
+      IM_ADAPT_COLORS(want_channels, src->channels, src_line, width);
+
+    for(x = src_minx; x < src_maxx; x++) {
+      alpha = srcp->channel[alphachan];
+      for (ch = 0; ch < im->channels; ++ch) {
+	IM_WORK_T samp = (alpha * srcp->channel[ch]
+                            + (IM_SAMPLE_MAX - alpha) * destp->channel[ch])/IM_SAMPLE_MAX;
+        destp->channel[ch] = IM_LIMIT(samp);
+      }
+      ++srcp;
+      ++destp;
+    }
+    IM_PLIN(im, tx, tx + width, tty, dest_line);
+    tty++;
+  }
+  myfree(src_line);
+  myfree(dest_line);
+#/code
+
+  return 1;
+}
+
+static int
+rubthru_targ_alpha(i_img *im, i_img *src, i_img_dim tx, i_img_dim ty, 
+                   i_img_dim src_minx, i_img_dim src_miny,
+                   i_img_dim src_maxx, i_img_dim src_maxy) {
+  i_img_dim x, y, ttx, tty;
+  int want_channels;
+  int alphachan;
+  int ch;
+  int targ_alpha_chan;
+  i_img_dim width = src_maxx - src_minx;
+  
+  if (im->channels == 4 && (src->channels == 4 || src->channels == 2)) {
+    alphachan = 3;
+    want_channels = 4;
+  }
+  else if (im->channels == 2 && (src->channels == 4 || src->channels == 2)) {
+    alphachan = 1;
+    want_channels = 2;
+  }
+  else {
+    i_copyto(im, src, src_minx, src_miny, src_maxx, src_maxy, tx, ty);
+    return 1;
+  }
+
+  targ_alpha_chan = im->channels - 1;
+
+#code im->bits <= 8 && src->bits <= 8
+  IM_WORK_T src_alpha, orig_alpha, dest_alpha, remains;
+  IM_COLOR *src_line, *dest_line;
+
+  src_line = mymalloc(sizeof(IM_COLOR) * width);
+  dest_line = mymalloc(sizeof(IM_COLOR) * width);
+
+  tty = ty;
+  for(y = src_miny; y < src_maxy; y++) {
+    i_img_dim min_x, max_x;
+    IM_COLOR *srcp = src_line;
+    IM_COLOR *destp = dest_line;
+    IM_GLIN(src, src_minx, src_maxx, y, src_line);
+    if (src->channels != want_channels)
+      IM_ADAPT_COLORS(want_channels, src->channels, src_line, width);
+    min_x = src_minx;
+    max_x = src_maxx;
+
+    while (min_x < max_x && srcp->channel[alphachan] == 0) {
+      ++min_x;
+      ++srcp;
+    }
+    while (max_x > min_x && src_line[max_x-1].channel[alphachan] == 0) {
+      --max_x;
+    }
+
+    if (max_x > min_x) {
+      i_img_dim work_left = tx + min_x - src_minx;
+      i_img_dim work_width = max_x - min_x;
+      ttx = work_left;
+      IM_GLIN(im, work_left, work_left + work_width, tty, dest_line);
+      
+      for(x = min_x; x < max_x; x++) {
+	src_alpha = srcp->channel[alphachan];
+	if (src_alpha) {
+	  remains = IM_SAMPLE_MAX - src_alpha;
+	  orig_alpha = destp->channel[targ_alpha_chan];
+	  dest_alpha = src_alpha + (remains * orig_alpha) / IM_SAMPLE_MAX;
+	  
+	  for (ch = 0; ch < im->channels-1; ++ch) {
+	    IM_WORK_T samp = 
+	      ( src_alpha * srcp->channel[ch]
+		+ remains * destp->channel[ch] * orig_alpha / IM_SAMPLE_MAX 
+		) / dest_alpha;
+	    destp->channel[ch] = IM_LIMIT(samp);
+	  }
+	  /* dest's alpha */
+	  destp->channel[targ_alpha_chan] = dest_alpha;
+	}
+	++srcp;
+	++destp;
+	ttx++;
+      }
+      IM_PLIN(im, work_left, work_left + work_width, tty, dest_line);
+    }
+    tty++;
+  }
+  myfree(dest_line);
+  myfree(src_line);
+#/code
+  return 1;
+}
+
+/*
+=item i_rubthru(C<im>, C<src>, C<tx>, C<ty>, C<src_minx>, C<src_miny>, C<src_maxx>, C<src_maxy>)
+
+=category Image
+
+Takes the sub image C<src>[C<src_minx>, C<src_maxx>)[C<src_miny>, C<src_maxy>)> and
+overlays it at (C<tx>,C<ty>) on the image object.
+
+The alpha channel of each pixel in C<src> is used to control how much
+the existing color in C<im> is replaced, if it is 255 then the color
+is completely replaced, if it is 0 then the original color is left
+unmodified.
+
+=cut
+*/
+
+int
+i_rubthru(i_img *im, i_img *src, i_img_dim tx, i_img_dim ty, i_img_dim src_minx, i_img_dim src_miny,
+	  i_img_dim src_maxx, i_img_dim src_maxy) {
+  if (src_minx < 0) {
+    tx -= src_minx;
+    src_minx = 0;
+  }
+  if (src_miny < 0) {
+    ty -= src_miny;
+    src_miny = 0;
+  }
+  if (tx < 0) {
+    src_minx -= tx;
+    tx = 0;
+  }
+  if (ty < 0) {
+    src_miny -= ty;
+    ty = 0;
+  }
+  if (src_maxx > src->xsize) {
+    src_maxx = src->xsize;
+  }
+  if (src_maxy > src->ysize) {
+    src_maxy = src->ysize;
+  }
+  if (tx >= im->xsize || ty >= im->ysize
+      || src_minx >= src_maxx || src_miny >= src_maxy) {
+    i_clear_error();
+    /* just do nothing, attempting to rubthrough outside the target isn't
+       worth being an error */
+    return 1;
+  }
+
+  if (im->channels == 1 || im->channels == 3)
+    return rubthru_targ_noalpha(im, src, tx, ty, src_minx, src_miny, 
+                                src_maxx, src_maxy);
+  else
+    return rubthru_targ_alpha(im, src, tx, ty, src_minx, src_miny,
+                              src_maxx, src_maxy);
+}

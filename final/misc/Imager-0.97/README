@@ -1,0 +1,98 @@
+================================================================
+Copyright (c) 1999-2004 Arnar M. Hrafnkelsson. All rights reserved.
+Copyright (c) 2004-2013 Anthony Cook.
+This program is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.
+
+A test font, FT2/fontfiles/MMOne.pfb contains Postscript code
+copyrighted by Adobe.  See adobe.txt for license information.
+================================================================
+
+>> THIS SOFTWARE COMES WITH ABSOLUTELY NO WARRANTY WHATSOEVER <<
+
+If you like or hate Imager, please let me know by sending mail 
+to tonyc@cpan.org - I love feedback.
+
+================================================================
+
+
+========================
+1. Patent infringements?
+========================
+
+Imager as such contains no patented algorithms.  The external
+libraries (which are not written by me) may or may not contain
+patented algorithms.  YOU ARE SOLELY RESPONSIBLE FOR OBTAINING
+LICENSE(S) TO USE SUCH LIBRARIES SHOULD YOU NEED ANY.
+
+
+========================
+2. Compiling and testing
+========================
+
+For details on the this process, including library and platform
+specific details, see Imager::Install, either by using:
+
+  perldoc lib/Imager/Install.pod
+
+or at:
+
+  http://imager.perl.org/docs/Imager/Install.html
+
+The basic installation process is similar to most other CPAN modules:
+
+  perl Makefile.PL
+  make
+  make test
+  make install
+
+=======================
+3. General information
+=======================
+
+The Imager module homepage is currently at:
+
+ http://imager.perl.org/
+
+You can report bugs by pointing your browser at:
+
+  https://rt.cpan.org/NoAuth/ReportBug.html?Queue=Imager
+
+========================
+4. Thanks
+========================
+
+Thanks go to:
+  Tony Cook           ( TonyC )
+  Claes Jacobson      ( Claes )
+  Philip Gwyn         ( Leolo )
+  Michael Slade       ( Micksa )
+                      ( Cogent )
+  Brad Murray         ( HalfJack )
+  Nicholas Dronen     ( Veblen )
+  Michael G Schwern   ( Schwern )
+  Rocco Caputo        ( Dngor )
+  Graham barr         ( Gbarr )
+  Mark-Jason Dominus  ( Mjd )
+  Jerome
+  Jason Alexander     ( Jalex )
+  Randal R. Schwartz  ( Merlyn )
+  Tkil                ( )
+  Artur Bergman       ( Sky )
+  Luc St-Louis        ( Lucs )
+  PerlJam             ( )
+  Roderick Schertler  ( Roderick )
+  Nathan Torkington   ( gnat )
+  Gabriel Vasseur
+  kmx
+  Nicolas Roggli
+  Justin Davis
+  Maurice Height
+  Krzysztof Wojtaś
+  David Cantrell
+  Eleneldil G. Arilou
+  Slaven Rezic
+  Richard Fairhurst
+  Nikita Dedik
+
+(and just to play it safe) all those I forgot to mention.

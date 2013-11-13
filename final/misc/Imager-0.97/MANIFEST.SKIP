@@ -1,0 +1,146 @@
+# unused test images
+^testimg/winrgboff\.bmp$
+^testimg/winrle\.bmp$
+^testimg/winrle8\.bmp$
+^testimg/os2rgb8\.bmp$
+^testimg/os2rle\.bmp$
+^testimg/os2rle8\.bmp$
+^testimg/base\.tga$
+
+# unshipped test images
+^xtestimg/
+
+# unshipped tests
+^xt/
+
+# base for some other images
+^testimg/pbm_base\.pgm$
+
+# svn work files
+^\.svn\b
+/\.svn\b
+
+# git work files
+^\.git/
+^(?:.*/)?\.gitignore$
+
+# editor trash
+~$
+(^|/)\#.*\#$
+(^|/)\.\#
+
+# stuff we don't distribute
+^TODO$
+^STATUS$
+^\.cvsignore$
+/\.cvsignore$
+^announce/
+^bench/
+^design/
+^fuzz/
+^fileformatdocs/
+^extraimages/
+^fontfiles/.*\.sfd$
+^imcover.perl$
+
+# might distribute one day
+^tools/imager$
+
+
+# trash left by Inline::C
+^_Inline/
+
+# distributions built
+^Imager-\d\.\d\d(_\d\d)?\.tar\.gz$
+
+# build trash
+Makefile$
+Makefile\.old$
+\bpm_to_blib$
+\.o$
+^MANIFEST\.bak$
+\bMYMETA\.yml$
+
+^testout/
+^FT2/testout/
+^GIF/testout/
+^ICO/testout/
+^JPEG/testout/
+^PNG/testout/
+^SGI/testout/
+^TIFF/testout/
+^T1/testout/
+^W32/testout/
+
+# generated from .xs
+^CountColor/CountColor\.c$
+^DynTest/DynTest\.c$
+^FT2/FT2\.c$
+^GIF/GIF\.c$
+^ICO/ICO\.c$
+^JPEG/JPEG\.c$
+^Mandelbrot/Mandelbrot\.c$
+^PNG/PNG\.c$
+^SGI/SGI\.c$
+^TIFF/TIFF\.c$
+^T1/T1\.c$
+^W32/W32\.c$
+
+^.*/Changes$
+^.*/MANIFEST(\.SKIP)?$
+^.+/inc/Devel/CheckLib\.pm$
+^.+/blib/
+^blib/
+^Flines/Flines\.c$
+^Imager\.c$
+^dynfilt/.*\.(so|dll)$
+\.bs$
+^meta\.tmp$
+/meta\.tmp$
+^imconfig\.h$
+
+# generated if we build them in their own directory
+^(PNG|TIFF|FT2|W32|GIF)/blib/
+
+# not shipped with Imager itself
+^(PNG|TIFF|FT2|W32|GIF)/MANIFEST
+
+# generated from .im files
+^combine\.c$
+^compose\.c$
+^conv\.c$
+^convert\.c$
+^filters\.c$
+^flip\.c$
+^gaussian\.c$
+^paste\.c$
+^render\.c$
+^rotate\.c$
+^rubthru\.c$
+^scale\.c$
+
+# trash from profiling
+\.gcno$
+\.gcda$
+\.gcov$
+\bcover_db\b
+
+# old web page generation scripts
+^samples/combines\.pl$
+^samples/hatches\.pl$
+^samples/logo$
+^samples/transform\.pl$
+^samples/transform1\.ppm$
+
+# Win32 junk
+^(.+/)?dll\.(base|exp)$
+^(.+/)?\w+\.def$
+^(.+/)?\w+\_def.old$
+\.exe$
+
+# sub-module build junk
+\.bak$
+MYMETA.json
+
+# dist dir
+^Imager-[01]\.[0-9]+/

@@ -1,0 +1,40 @@
+#!/usr/bin/env perl
+
+use 5.12.0;
+use Imager;
+my $file1 = shift || usage();
+my $file2 = shift || usage();
+
+my $img1 = Imager->new;
+my $img2 = Imager->new;
+$img1->read( file => $file1 ) or die $img1->errstr;
+$img2->read( file => $file2 ) or die $img2->errstr;
+
+diff_pixels_percentage($img1, $img2);
+
+sub diff_pixels_percentage {
+    my ($img, $other) = @_;
+
+    my $w = $img->getwidth;
+    my $h = $img->getheight;
+    my $all = $w * $h;
+    my $diff = $img->difference(
+        other   => $other,
+        mindist => 24,
+    ) or die "Can't load image " . $img->errstr;
+    my $diff_pixels = 0;
+    for my $y ( 0 .. $h - 1 ) {
+        for my $c ( $diff->getscanline( y => $y ) ) {
+            my (undef, undef, undef, $alpha) = $c->rgba();
+            $diff_pixels++ if $alpha != 0;
+        }
+    }
+    my $p = sprintf("%.2f", $diff_pixels / $all * 100);
+    say "$diff_pixels / $all = $p%";
+}
+
+sub usage {
+    say "Usage: ";
+    say "$0 orig.jpg compare.jpg";
+    exit 1;
+}

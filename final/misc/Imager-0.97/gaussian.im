@@ -1,0 +1,114 @@
+#define IMAGER_NO_CONTEXT
+#include "imager.h"
+#include <math.h>
+
+static double
+gauss(int x, double std) {
+  return 1.0/(sqrt(2.0*PI)*std)*exp(-(double)(x)*(double)(x)/(2*std*std));
+}
+
+/* Counters are as follows
+ l:  lines
+ i:  columns
+ c:  filter coeffs
+ ch: channels
+ pc: coeff equalization
+*/
+
+
+
+int
+i_gaussian(i_img *im, double stddev) {
+  int i, c, ch;
+  i_img_dim x, y;
+  double pc;
+  double *coeff;
+  double res[MAXCHANNELS];
+  i_img *timg;
+  int radius, diameter;
+  dIMCTXim(im);
+
+  im_log((aIMCTX, 1,"i_gaussian(im %p, stdev %.2f)\n",im,stddev));
+  i_clear_error();
+
+  if (stddev <= 0) {
+    i_push_error(0, "stddev must be positive");
+    return 0;
+  }
+  /* totally silly cutoff */
+  if (stddev > 1000) {
+    stddev = 1000;
+  }
+ 
+  timg = i_sametype(im, im->xsize, im->ysize);
+
+  if (im->bits <= 8)
+    radius = ceil(2 * stddev);
+  else
+    radius = ceil(3 * stddev);
+
+  diameter = 1 + radius * 2;
+
+  coeff = mymalloc(sizeof(double) * diameter);
+
+  for(i=0;i <= radius;i++) 
+    coeff[radius + i]=coeff[radius - i]=gauss(i, stddev);
+  pc=0;
+  for(i=0; i < diameter; i++)
+    pc+=coeff[i];
+  for(i=0;i < diameter;i++)
+    coeff[i] /= pc;
+
+
+#code im->bits <= 8
+  IM_COLOR rcolor;
+  for(y = 0; y < im->ysize; y++) {
+    for(x = 0; x < im->xsize; x++) {
+      pc=0.0;
+      for(ch=0;ch<im->channels;ch++) 
+	res[ch]=0; 
+      for(c = 0;c < diameter; c++)
+	if (IM_GPIX(im,x+c-radius,y,&rcolor)!=-1) {
+	  for(ch=0;ch<im->channels;ch++) 
+	    res[ch]+= rcolor.channel[ch] * coeff[c];
+	  pc+=coeff[c];
+	}
+      for(ch=0;ch<im->channels;ch++) {
+	double value = res[ch] / pc;
+	rcolor.channel[ch] = value > IM_SAMPLE_MAX ? IM_SAMPLE_MAX : IM_ROUND(value);
+      }
+      IM_PPIX(timg, x, y, &rcolor);
+    }
+  }
+  
+  for(x = 0;x < im->xsize; x++) {
+    for(y = 0; y < im->ysize; y++) {
+      pc=0.0;
+      for(ch=0; ch<im->channels; ch++)
+	res[ch]=0; 
+      for(c=0; c < diameter; c++)
+	if (IM_GPIX(timg, x, y+c-radius, &rcolor)!=-1) {
+	  for(ch=0;ch<im->channels;ch++) 
+	    res[ch]+= rcolor.channel[ch] * coeff[c];
+	  pc+=coeff[c];
+	}
+      for(ch=0;ch<im->channels;ch++) {
+	double value = res[ch]/pc;
+	rcolor.channel[ch] = value > IM_SAMPLE_MAX ? IM_SAMPLE_MAX : IM_ROUND(value);
+      }
+      IM_PPIX(im, x, y, &rcolor);
+    }
+  }
+#/code
+  myfree(coeff);
+  i_img_destroy(timg);
+  
+  return 1;
+}
+
+
+
+
+
+
+

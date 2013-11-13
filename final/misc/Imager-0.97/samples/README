@@ -1,0 +1,128 @@
+This directory includes example code for Imager.
+
+If you have sample code to contribute, please contact the maintainer.
+
+The notes here just provide a basic description and the functions
+used.
+
+anaglyph.pl
+
+  Produce a color, grey or pure anaglyph image given left and right
+  images of a stereoscopic pair.
+
+  Uses transform2() and convert().
+
+replace_color.pl
+
+  Example using Imager::transform2() to replace one color with another
+  in an image.
+
+  http://www.perlmonks.org/?node_id=497355
+
+inline_replace_color.pl
+
+  Example using Inline::C and the Imager API to replace one color with
+  another in an image.
+
+interleave.pl
+
+  Produce an interleaved image given the left and right images of a
+  stereoscopic pair.  Note that the source images must be pre-scaled.
+
+  This includes 3 different implementations, first using transform2(),
+  the second using the internal i_copyto() function and the third using
+  the internal i_glin() and i_plin() functions.
+
+samp-form.cgi
+samp-image.cgi
+
+  Example that demonstrates generating an image linked from a HTML form.
+
+  The POD for this sample discusses alternate approaches and security
+  considerations.
+
+samp-scale.html
+samp-scale.cgi
+
+  Example that demonstrates reading an image uploaded via a HTML form.
+
+  Produces an output image scaled to fit inside 200x200.
+
+samp-tags.html
+samp-tags.cgi
+
+  Example that demonstrates reading an image uploaded via a HTML form.
+
+  Produces a text/plain report of the tags that Imager defined for the
+  image.
+
+  This and the previous sample are very similar, the intent is to show
+  the common elements and to demonstrate that the output is independent
+  of the input.
+
+  See the section "Parsing an image posted via CGI" in Imager::Cookbook
+  for cautions and details on reading uploaded images.
+
+border.pl
+
+  Example of adding a border to an image.
+
+slant_text.pl
+
+  Example of drawing transformed text.
+
+  Draws slanted or rotated text to a new image and saves it to a file.
+
+  As part of this it demonstrates calculating the transformed bounding
+  box of the text.
+
+tk-photo.pl
+
+  Simple example of making a Tk::Photo object using Imager data.
+
+align-string.pl
+
+  Simple demonstration of the align_string() method.  Usage:
+
+   perl align-string.pl fontfile size outputfile text...
+
+  eg.
+
+   perl align-string.pl fontfiles/ImUgly.ttf 60 test.ppm .A.
+
+  This demonstrates how the various values of halign and valign
+  behave.
+
+inline_capture2image.pl
+
+  Demonstrates using Inline and Imager's API to convert captured BGR
+  image data into an Imager image.
+
+flasher.pl
+
+  Animate an image fading down to a background color and back again.
+
+  Demonstrates setting an alpha channel with convert(), rubthrough(), 
+  and writing animated GIFs.
+
+gifscale.pl
+
+  Scales an animated GIF image, preserving GIF animation information
+  and adjusting the image screen positions to account for the scale
+  factor.
+
+quad_to_square.pl
+
+  Sample from Richard Fairhurst demonstrating the use of the transform2()
+  det() function.  Transforms an arbitrary quadrilateral in the input into
+  a square on the output.
+
+wiggle.pl
+
+  Produce an animated GIF that blends back and forth between the two
+  supplied images.  If the input images form a stereo pair the GIF can
+  be used for wiggle stereoscopy.
+
+drop_shadow.pl
+
+  Produce a drop shadow based on the source image alpha channel.

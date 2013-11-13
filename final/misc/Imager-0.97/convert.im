@@ -1,0 +1,331 @@
+/*
+=head1 NAME
+
+  convert.im - image conversions
+
+=head1 SYNOPSIS
+
+  out = i_convert(srcimage, coeff, outchans, inchans)
+
+=head1 DESCRIPTION
+
+Converts images from one format to another, typically in this case for
+converting from RGBA to greyscale and back.
+
+=over
+
+=cut
+*/
+
+#define IMAGER_NO_CONTEXT
+#include "imager.h"
+
+struct chan_copy {
+  /* channels to copy */
+  int copy_count;
+  int from[MAXCHANNELS];
+  int to[MAXCHANNELS];
+
+  /* channels to zero */
+  int zero_count;
+  int zero[MAXCHANNELS];
+
+  /* channels to set to maxsample */
+  int one_count;
+  int one[MAXCHANNELS];
+};
+
+static int 
+is_channel_copy(i_img *im, const double *coeff, 
+		int outchan, int inchan, 
+		struct chan_copy *info);
+
+static i_img *
+convert_via_copy(i_img *im, i_img *src, struct chan_copy *info);
+
+/*
+=item i_convert(src, coeff, outchan, inchan)
+
+Converts the image src into another image.
+
+coeff contains the co-efficients of an outchan x inchan matrix, for
+each output pixel:
+
+              coeff[0], coeff[1] ...
+  im[x,y] = [ coeff[inchan], coeff[inchan+1]...        ] * [ src[x,y], 1]
+              ...              coeff[inchan*outchan-1]
+
+If im has the wrong number of channels or is the wrong size then
+i_convert() will re-create it.
+
+Now handles images with more than 8-bits/sample.
+
+=cut
+*/
+
+i_img *
+i_convert(i_img *src, const double *coeff, int outchan, int inchan) {
+  double work[MAXCHANNELS];
+  i_img_dim x, y;
+  int i, j;
+  int ilimit;
+  i_img *im = NULL;
+  dIMCTXim(src);
+
+  im_log((aIMCTX,1,"i_convert(im %p, src %p, coeff %p,outchan %d, inchan %d)\n",
+	  im, src, coeff, outchan, inchan));
+ 
+  im_clear_error(aIMCTX);
+
+  ilimit = inchan;
+  if (ilimit > src->channels)
+    ilimit = src->channels;
+  if (outchan > MAXCHANNELS) {
+    im_push_error(aIMCTX, 0, "cannot have outchan > MAXCHANNELS");
+    return 0;
+  }
+
+  if (src->type == i_direct_type) {
+    struct chan_copy info;
+    im = i_sametype_chans(src, src->xsize, src->ysize, outchan);
+    
+    if (is_channel_copy(src, coeff, outchan, inchan, &info)) {
+      return convert_via_copy(im, src, &info);
+    }
+    else {
+#code src->bits <= i_8_bits
+      IM_COLOR *vals;
+      
+      /* we can always allocate a single scanline of i_color */
+      vals = mymalloc(sizeof(IM_COLOR) * src->xsize); /* checked 04Jul05 tonyc */
+      for (y = 0; y < src->ysize; ++y) {
+	IM_GLIN(src, 0, src->xsize, y, vals);
+	for (x = 0; x < src->xsize; ++x) {
+	  for (j = 0; j < outchan; ++j) {
+	    work[j] = 0;
+	    for (i = 0; i < ilimit; ++i) {
+	      work[j] += coeff[i+inchan*j] * vals[x].channel[i];
+	    }
+	    if (i < inchan) {
+	      work[j] += coeff[i+inchan*j] * IM_SAMPLE_MAX;
+	    }
+	  }
+	  for (j = 0; j < outchan; ++j) {
+	    if (work[j] < 0)
+	      vals[x].channel[j] = 0;
+	    else if (work[j] >= IM_SAMPLE_MAX)
+	      vals[x].channel[j] = IM_SAMPLE_MAX;
+	    else
+	      vals[x].channel[j] = work[j];
+	  }
+	}
+	IM_PLIN(im, 0, src->xsize, y, vals);
+      }
+      myfree(vals);
+#/code
+    }
+  }
+  else {
+    int count;
+    int outcount;
+    int index;
+    i_color *colors;
+    i_palidx *vals;
+
+    im = im_img_pal_new(aIMCTX, src->xsize, src->ysize, outchan, 
+			i_maxcolors(src));
+
+    /* just translate the color table */
+    count = i_colorcount(src);
+    outcount = i_colorcount(im);
+    /* color table allocated for image, so it must fit */
+    colors = mymalloc(count * sizeof(i_color)); /* check 04Jul05 tonyc */
+    i_getcolors(src, 0, colors, count);
+    for (index = 0; index < count; ++index) {
+      for (j = 0; j < outchan; ++j) {
+        work[j] = 0;
+        for (i = 0; i < ilimit; ++i) {
+          work[j] += coeff[i+inchan*j] * colors[index].channel[i];
+        }
+        if (i < inchan) {
+          work[j] += coeff[i+inchan*j] * 255.9;
+        }
+      }
+      for (j = 0; j < outchan; ++j) {
+        if (work[j] < 0)
+          colors[index].channel[j] = 0;
+        else if (work[j] >= 255)
+          colors[index].channel[j] = 255;
+        else
+          colors[index].channel[j] = work[j];
+      }
+    }
+    if (count < outcount) {
+      i_setcolors(im, 0, colors, count);
+    }
+    else {
+      i_setcolors(im, 0, colors, outcount);
+      i_addcolors(im, colors, count-outcount);
+    }
+    /* and copy the indicies */
+    /* i_palidx is always unsigned char and will never be bigger than short
+       and since a line of 4-byte i_colors can fit then a line of i_palidx
+       will fit */
+    vals = mymalloc(sizeof(i_palidx) * im->xsize); /* checked 4jul05 tonyc */
+    for (y = 0; y < im->ysize; ++y) {
+      i_gpal(src, 0, im->xsize, y, vals);
+      i_ppal(im, 0, im->xsize, y, vals);
+    }
+    myfree(vals);
+    myfree(colors);
+  }
+
+  return im;
+}
+
+/*
+=item is_channel_copy(coeff, outchan, inchan, chan_copy_info)
+
+Test if the coefficients represent just copying channels around, and
+initialize lists of the channels to copy, zero or set to max.
+
+=cut
+*/
+
+static
+int is_channel_copy(i_img *im, const double *coeff, int outchan, int inchan, 
+		    struct chan_copy *info) {
+  int srcchan[MAXCHANNELS];
+  int onechan[MAXCHANNELS];
+  int i, j;
+  int ilimit = im->channels > inchan ? inchan : im->channels;
+
+  for (j = 0; j < outchan; ++j) {
+    srcchan[j] = -1;
+    onechan[j] = 0;
+  }
+
+  for (j = 0; j < outchan; ++j) {
+    for (i = 0; i < ilimit; ++i) {
+      if (coeff[i+inchan*j] == 1.0) {
+	if (srcchan[j] != -1) {
+	  /* from two or more channels, not a copy */
+	  return 0;
+	}
+	srcchan[j] = i;
+      }
+      else if (coeff[i+inchan*j]) {
+	/* some other non-zero value, not a copy */
+	return 0;
+      }
+    }
+    if (i < inchan) {
+      if (coeff[i+inchan*j] == 1.0) {
+	if (srcchan[j] != -1) {
+	  /* can't do both */
+	  return 0;
+	}
+	onechan[j] = 1;
+      }
+      else if (coeff[i+inchan*j]) {
+	/* some other non-zero value, not a copy */
+	return 0;
+      }
+    }
+  }
+
+  /* build our working data structures */
+  info->copy_count = info->zero_count = info->one_count = 0;
+  for (j = 0; j < outchan; ++j) {
+    if (srcchan[j] != -1) {
+      info->from[info->copy_count] = srcchan[j];
+      info->to[info->copy_count] = j;
+      ++info->copy_count;
+    }
+    else if (onechan[j]) {
+      info->one[info->one_count] = j;
+      ++info->one_count;
+    }
+    else {
+      info->zero[info->zero_count] = j;
+      ++info->zero_count;
+    }
+  }
+
+#if 0
+  {
+    for (i = 0; i < info->copy_count; ++i) {
+      printf("From %d to %d\n", info->from[i], info->to[i]);
+    }
+    for (i = 0; i < info->one_count; ++i) {
+      printf("One %d\n", info->one[i]);
+    }
+    for (i = 0; i < info->zero_count; ++i) {
+      printf("Zero %d\n", info->zero[i]);
+    }
+    fflush(stdout);
+  }
+#endif
+
+  return 1;
+}
+
+/*
+=item convert_via_copy(im, src, chan_copy_info)
+
+Perform a convert that only requires channel copies.
+
+=cut
+*/
+
+static i_img *
+convert_via_copy(i_img *im, i_img *src, struct chan_copy *info) {
+#code src->bits <= i_8_bits
+  IM_COLOR *in_line = mymalloc(sizeof(IM_COLOR) * src->xsize);
+  IM_COLOR *out_line = mymalloc(sizeof(IM_COLOR) * src->xsize);
+  i_img_dim x, y;
+  int i;
+  IM_COLOR *inp, *outp;
+
+  for (y = 0; y < src->ysize; ++y) {
+    IM_GLIN(src, 0, src->xsize, y, in_line);
+
+    inp = in_line;
+    outp = out_line;
+    for (x = 0; x < src->xsize; ++x) {
+      for (i = 0; i < info->copy_count; ++i) {
+	outp->channel[info->to[i]] = inp->channel[info->from[i]];
+      }
+      for (i = 0; i < info->one_count; ++i) {
+	outp->channel[info->one[i]] = IM_SAMPLE_MAX;
+      }
+      for (i = 0; i < info->zero_count; ++i) {
+	outp->channel[info->zero[i]] = 0;
+      }
+      ++inp;
+      ++outp;
+    }
+    
+    IM_PLIN(im, 0, src->xsize, y, out_line);
+  }
+  
+  myfree(in_line);
+  myfree(out_line);
+#/code
+      
+  return im;
+}
+
+/*
+=back
+
+=head1 SEE ALSO
+
+Imager(3)
+
+=head1 AUTHOR
+
+Tony Cook <tony@develop-help.com>
+
+=cut
+*/

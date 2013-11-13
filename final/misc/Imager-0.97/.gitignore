@@ -1,0 +1,10 @@
+Makefile.old
+Makefile
+combine.c
+compose.c
+convert.c
+flip.c
+imconfig.h
+new
+paste.c
+rotate.c

@@ -1,0 +1,15 @@
+Imager::File::GIF provides GIF file format support for Imager.
+
+It requires libgif to be installed, including development headers.
+
+For Linux distributions this typically requires installation of the
+associated -dev or -devel package.
+
+See Imager::Install for more information.
+
+Imager::File::GIF is currently shipped as part of Imager, but Imager
+may install with out installing Imager::File::GIF, so if you need GIF
+support, add a dependency on Imager::File::GIF.
+
+Makefile.PL will reject libgif 4.2.0 and 5.0.0 due to bugs in those
+releases.

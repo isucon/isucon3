@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html" charset="utf-8">
+<title>Isucon3Final</title>
+<link rel="shortcut icon" href="<: $c.req.uri_for('/favicon.ico') :>" type="image/vnd.microsoft.icon" />
+<link rel="stylesheet" href="<: $c.req.uri_for('/css/bootstrap.min.css') :>">
+<style>
+body {
+  padding-top: 60px;
+}
+div.timeline {
+  clear: both;
+}
+div.entry {
+  border: 1px solid #ccc;
+  float:left;
+  height: 160px;
+  width: 128px;
+  padding: 0;
+  text-align: left;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.follow_user, .unfollow_user {
+  cursor: pointer;
+}
+
+table {
+  font-size: 1.5em;
+}
+
+</style>
+<link rel="stylesheet" href="<: $c.req.uri_for('/css/bootstrap-responsive.min.css') :>">
+<script type="text/javascript" src="<: $c.req.uri_for('/js/jquery.min.js') :>"></script>
+<script type="text/javascript" src="<: $c.req.uri_for('/js/bootstrap.min.js') :>"></script>
+<script type="text/javascript" src="<: $c.req.uri_for('/js/jquery.upload-1.0.2.js') :>"></script>
+<script type="text/javascript" src="<: $c.req.uri_for('/js/jquery.cookie.js') :>"></script>
+<script type="text/javascript" src="<: $c.req.uri_for('/js/jquery.tmpl.js') :>"></script>
+<script type="text/javascript" src="<: $c.req.uri_for('/js/app.js') :>"></script>
+<script id="entry_template" type="text/x-jquery-tmpl">
+<div class="entry">
+  <a href="${image}"><img src="${image}?size=s" width="128" height="128">${comment}</a>
+  <br>
+  <a class="follow_user" data-userid="${user.id}" data-username="${user.name}"><img src="${user.icon}" width="32" height="32"> ${user.name}</a>
+</div>
+</script>
+
+<script id="following_template" type="text/x-jquery-tmpl">
+  <a class="unfollow_user" data-userid="${id}" data-username="${name}"><img src="${icon}" width="32" height="32" title="${name}"></a>
+</script>
+
+</head>
+<body>
+
+<div class="navbar navbar-fixed-top">
+<div class="navbar-inner">
+<div class="container">
+<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+<span class="icon-bar"></span>
+<span class="icon-bar"></span>
+<span class="icon-bar"></span>
+</a>
+<a class="brand" href="<: $c.req.uri_for('/') :>">Isucon3Final</a>
+<div class="nav-collapse">
+<ul class="nav">
+<li class="active"><a href="<: $c.req.uri_for('/') :>">Home</a></li>
+</ul>
+</div> <!--/.nav-collapse -->
+</div>
+</div>
+</div>
+
+<div class="container">
+
+: block content -> { }
+
+</div> <!-- /container -->
+
+</body>
+</html>
+
+

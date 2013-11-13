@@ -1,0 +1,248 @@
+#include "imager.h"
+#include "imrender.h"
+#include "imageri.h"
+
+int
+i_compose_mask(i_img *out, i_img *src, i_img *mask, 
+	       i_img_dim out_left, i_img_dim out_top,
+	       i_img_dim src_left, i_img_dim src_top,
+	       i_img_dim mask_left, i_img_dim mask_top,
+	       i_img_dim width, i_img_dim height,
+	       int combine,
+	       double opacity) {
+  i_render r;
+  i_img_dim dy;
+  i_fill_combine_f combinef_8;
+  i_fill_combinef_f combinef_double;
+  int channel_zero = 0;
+
+  mm_log((1, "i_compose_mask(out %p, src %p, mask %p, out(" i_DFp "), "
+	  "src(" i_DFp "), mask(" i_DFp "), size(" i_DFp "),"
+	  " combine %d opacity %f\n", out, src, 
+	  mask, i_DFcp(out_left, out_top), i_DFcp(src_left, src_top),
+	  i_DFcp(mask_left, mask_top), i_DFcp(width, height),
+	  combine, opacity));
+
+  i_clear_error();
+  if (out_left >= out->xsize
+      || out_top >= out->ysize
+      || src_left >= src->xsize
+      || src_top >= src->ysize
+      || width <= 0
+      || height <= 0
+      || out_left + width <= 0
+      || out_top + height <= 0
+      || src_left + width <= 0
+      || src_top + height <= 0
+      || mask_left >= mask->xsize
+      || mask_top >= mask->ysize
+      || mask_left + width <= 0
+      || mask_top + height <= 0)
+    return 0;
+
+  if (out_left < 0) {
+    width = out_left + width;
+    src_left -= out_left;
+    mask_left -= out_left;
+    out_left = 0;
+  }
+  if (out_left + width > out->xsize)
+    width = out->xsize - out_left;
+
+  if (out_top < 0) {
+    height = out_top + height;
+    mask_top -= out_top;
+    src_top -= out_top;
+    out_top = 0;
+  }
+  if (out_top + height > out->ysize)
+    height = out->ysize - out_top;
+
+  if (src_left < 0) {
+    width = src_left + width;
+    out_left -= src_left;
+    mask_left -= src_left;
+    src_left = 0;
+  }
+  if (src_left + width > src->xsize)
+    width = src->xsize - src_left;
+
+  if (src_top < 0) {
+    height = src_top + height;
+    out_top -= src_top;
+    mask_top -= src_top;
+    src_top = 0;
+  }
+  if (src_top + height > src->ysize)
+    height = src->ysize - src_top;
+
+  if (mask_left < 0) {
+    width = mask_left + width;
+    out_left -= mask_left;
+    src_left -= mask_left;
+    mask_left = 0;
+  }
+  if (mask_left + width > mask->xsize)
+    width = mask->xsize - mask_left;
+  
+  if (mask_top < 0) {
+    height = mask_top + height;
+    src_top -= mask_top;
+    out_top -= mask_top;
+    mask_top = 0;
+  }
+  if (mask_top + height > mask->ysize)
+    height = mask->ysize - mask_top;
+
+  if (opacity > 1.0)
+    opacity = 1.0;
+  else if (opacity <= 0) {
+    i_push_error(0, "opacity must be positive");
+    return 0;
+  }
+
+  mm_log((1, "after adjustments: (out(" i_DFp "), src(" i_DFp "),"
+	  " mask(" i_DFp "), size(" i_DFp ")\n", 
+	  i_DFcp(out_left, out_top), i_DFcp(src_left, src_top),
+	  i_DFcp(mask_left, mask_top), i_DFcp(width, height)));
+
+  i_get_combine(combine, &combinef_8, &combinef_double);
+
+  i_render_init(&r, out, width);
+#code out->bits <= 8 && src->bits<= 8 && mask->bits <= 8
+  IM_COLOR *src_line = mymalloc(sizeof(IM_COLOR) * width);
+  IM_SAMPLE_T *mask_line = mymalloc(sizeof(IM_SAMPLE_T) * width);
+  int adapt_channels = out->channels;
+
+  if (adapt_channels == 1 || adapt_channels == 3)
+    ++adapt_channels;
+
+  for (dy = 0; dy < height; ++dy) {
+    IM_GLIN(src, src_left, src_left + width, src_top + dy, src_line);
+    IM_ADAPT_COLORS(adapt_channels, src->channels, src_line, width);
+    IM_GSAMP(mask, mask_left, mask_left + width, mask_top + dy, 
+	     mask_line, &channel_zero, 1);
+    if (opacity < 1.0) {
+      i_img_dim i;
+      IM_SAMPLE_T *maskp = mask_line;
+      for (i = 0; i < width; ++i) {
+	*maskp = IM_ROUND(*maskp * opacity);
+	++maskp;
+      }
+    }
+    IM_RENDER_LINE(&r, out_left, out_top+dy, width, mask_line, src_line,
+		   IM_SUFFIX(combinef));
+  }
+  myfree(src_line);
+  myfree(mask_line);
+  
+#/code
+  i_render_done(&r);
+
+  return 1;
+}
+
+int
+i_compose(i_img *out, i_img *src,
+	  i_img_dim out_left, i_img_dim out_top,
+	  i_img_dim src_left, i_img_dim src_top,
+	  i_img_dim width, i_img_dim height,
+	  int combine,
+	  double opacity) {
+  i_render r;
+  i_img_dim dy;
+  i_fill_combine_f combinef_8;
+  i_fill_combinef_f combinef_double;
+
+  mm_log((1, "i_compose(out %p, src %p, out(" i_DFp "), src(" i_DFp "), "
+	  "size(" i_DFp "), combine %d opacity %f\n", out, src,
+	  i_DFcp(out_left, out_top), i_DFcp(src_left, src_top),
+	  i_DFcp(width, height), combine, opacity));
+
+  i_clear_error();
+  if (out_left >= out->xsize
+      || out_top >= out->ysize
+      || src_left >= src->xsize
+      || src_top >= src->ysize
+      || width <= 0
+      || height <= 0
+      || out_left + width <= 0
+      || out_top + height <= 0
+      || src_left + width <= 0
+      || src_top + height <= 0)
+    return 0;
+
+  if (out_left < 0) {
+    width = out_left + width;
+    src_left -= out_left;
+    out_left = 0;
+  }
+  if (out_left + width > out->xsize)
+    width = out->xsize - out_left;
+
+  if (out_top < 0) {
+    height = out_top + height;
+    src_top -= out_top;
+    out_top = 0;
+  }
+  if (out_top + height > out->ysize)
+    height = out->ysize - out_top;
+
+  if (src_left < 0) {
+    width = src_left + width;
+    out_left -= src_left;
+    src_left = 0;
+  }
+  if (src_left + width > src->xsize)
+    width = src->xsize - src_left;
+
+  if (src_top < 0) {
+    height = src_top + height;
+    out_top -= src_top;
+    src_top = 0;
+  }
+  if (src_top + height > src->ysize)
+    height = src->ysize - src_top;
+
+  if (opacity > 1.0)
+    opacity = 1.0;
+  else if (opacity <= 0) {
+    i_push_error(0, "opacity must be positive");
+    return 0;
+  }
+
+  i_get_combine(combine, &combinef_8, &combinef_double);
+
+  i_render_init(&r, out, width);
+#code out->bits <= 8 && src->bits <= 8
+  IM_COLOR *src_line = mymalloc(sizeof(IM_COLOR) * width);
+  IM_SAMPLE_T *mask_line = NULL;
+  int adapt_channels = out->channels;
+
+  if (opacity != 1.0) {
+    i_img_dim i;
+    IM_SAMPLE_T mask_value = IM_ROUND(opacity * IM_SAMPLE_MAX);
+    mask_line = mymalloc(sizeof(IM_SAMPLE_T) * width);
+
+    for (i = 0; i < width; ++i)
+      mask_line[i] = mask_value;
+  }
+
+  if (adapt_channels == 1 || adapt_channels == 3)
+    ++adapt_channels;
+
+  for (dy = 0; dy < height; ++dy) {
+    IM_GLIN(src, src_left, src_left + width, src_top + dy, src_line);
+    IM_ADAPT_COLORS(adapt_channels, src->channels, src_line, width);
+    IM_RENDER_LINE(&r, out_left, out_top+dy, width, mask_line, src_line,
+		   IM_SUFFIX(combinef));
+  }
+  myfree(src_line);
+  if (mask_line)
+    myfree(mask_line);
+  
+#/code
+  i_render_done(&r);
+
+  return 1;
+}

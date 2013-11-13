@@ -1,0 +1,81 @@
+/*
+=head1 NAME
+
+combine.im - combining channels into an image
+
+=head1 SYNOPSIS
+
+  out = i_combine(imgs, channels, count);
+
+=head1 DESCRIPTION
+
+Combines channels from the input images into an output image.
+
+=over
+
+=cut
+*/
+
+#include "imager.h"
+
+i_img *
+i_combine(i_img **imgs, const int *channels, int in_count) {
+  i_img *out = NULL;
+  int maxbits = 0;
+  i_img *maximg = NULL;
+  int i;
+  i_img_dim width, height;
+  i_img_dim x, y;
+
+  i_clear_error();
+  if (in_count <= 0) {
+    i_push_error(0, "At least one image must be supplied");
+    return NULL;
+  }
+  if (in_count > MAXCHANNELS) {
+    i_push_errorf(0, "Maximum of %d channels, you supplied %d",
+		  MAXCHANNELS, in_count);
+    return NULL;
+  }
+
+  width = imgs[0]->xsize;
+  height = imgs[0]->ysize;
+  for (i = 0; i < in_count; ++i) {
+    if (imgs[i]->bits > maxbits) {
+      maximg = imgs[i];
+      maxbits = maximg->bits;
+    }
+    if (imgs[i]->xsize < width)
+      width = imgs[i]->xsize;
+    if (imgs[i]->ysize < height)
+      height = imgs[i]->ysize;
+    if (channels[i] < 0) {
+      i_push_error(0, "Channel numbers must be zero or positive");
+      return NULL;
+    }
+    if (channels[i] >= imgs[i]->channels) {
+      i_push_errorf(0, "Channel %d for image %d is too high (%d channels)",
+		    channels[i], i, imgs[i]->channels);
+      return NULL;
+    }
+  }
+
+  out = i_sametype_chans(maximg, width, height, in_count);
+  if (!out)
+    return NULL;
+#code maxbits <= i_8_bits
+  IM_SAMPLE_T *in_row = mymalloc(sizeof(IM_SAMPLE_T) * width);
+  IM_COLOR *out_row = mymalloc(sizeof(IM_COLOR) * width);
+
+  for (y = 0; y < height; ++y) {
+    for (i = 0; i < in_count; ++i) {
+      IM_GSAMP(imgs[i], 0, width, y, in_row, channels + i, 1);
+      for (x = 0; x < width; ++x)
+	out_row[x].channel[i] = in_row[x];
+    }
+    IM_PLIN(out, 0, width, y, out_row);
+  }
+#/code
+
+  return out;
+}

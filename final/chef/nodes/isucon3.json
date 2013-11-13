@@ -1,0 +1,21 @@
+{
+  "run_list": ["common-packages", "iptables", "local-accounts", "supervisor", "php", "golang", "httpd", "mysql", "xbuild"],
+  "xbuild": {
+    "user": "isucon",
+    "perl": {
+      "version": "5.18.1",
+      "prefix": "/home/isucon/local/perl-5.18"
+    },
+    "ruby": {
+      "version": "2.0.0-p247",
+      "prefix": "/home/isucon/local/ruby-2.0"
+    },
+    "python": {
+      "version": "3.3.2",
+      "prefix": "/home/isucon/local/python-3.3"
+    },
+    "node": {
+      "version": "v0.10.21",
+      "prefix": "/home/isucon/local/node-v0.10"
+    }
+}

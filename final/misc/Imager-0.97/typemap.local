@@ -1,0 +1,139 @@
+# definitions we don't want to make visible to the world
+# because they're intended for use specifically by Imager.xs
+
+# internal types used in Imager.xs
+i_channel_list	 	T_IM_CHANNEL_LIST
+i_sample_list		T_IM_SAMPLE_LIST
+i_fsample_list		T_IM_FSAMPLE_LIST
+
+off_t			T_OFF_T
+
+Imager::Internal::Hlines T_PTROBJ
+
+Imager::Context		 T_PTROBJ
+
+i_palidx		T_IV
+double *		T_AVARRAY
+int *  			T_AVARRAY
+i_img_dim *		T_AVARRAY
+i_color *		T_AVARRAY
+
+
+#############################################################################
+INPUT
+
+T_OFF_T
+  $var = i_sv_off_t(aTHX_ $arg);
+
+T_IM_CHANNEL_LIST
+        SvGETMAGIC($arg);
+	if (SvOK($arg)) {
+	  AV *channels_av;
+	  int i;
+	  if (!SvROK($arg) || SvTYPE(SvRV($arg)) != SVt_PVAV) {
+	    croak(\"$var is not an array ref\");
+	  }
+	  channels_av = (AV *)SvRV($arg);
+ 	  $var.count = av_len(channels_av) + 1;
+	  if ($var.count < 1) {
+	    croak(\"$pname: no channels provided\");
+	  }
+	  $var.channels = malloc_temp(aTHX_ sizeof(int) * $var.count);
+ 	  for (i = 0; i < $var.count; ++i) {
+	    SV **entry = av_fetch(channels_av, i, 0);
+	    $var.channels[i] = entry ? SvIV(*entry) : 0;
+	  }
+        }
+	else {
+	  /* assumes we have an image */
+	  $var.count = im->channels;
+	  $var.channels = NULL;
+	}
+
+T_IM_SAMPLE_LIST
+	SvGETMAGIC($arg);
+	if (!SvOK($arg))
+	  croak(\"$var must be a scalar or an arrayref\");
+	if (SvROK($arg)) {
+	  i_img_dim i;
+	  AV *av;
+	  i_sample_t *s;
+	  if (SvTYPE(SvRV($arg)) != SVt_PVAV)
+	    croak(\"$var must be a scalar or an arrayref\");
+	  av = (AV *)SvRV($arg);
+          $var.count = av_len(av) + 1;
+          if ($var.count < 1)
+	    croak(\"$pname: no samples provided in $var\");
+	  s = malloc_temp(aTHX_ sizeof(i_sample_t) * $var.count);
+ 	  for (i = 0; i < $var.count; ++i) {
+	    SV **entry = av_fetch(av, i, 0);
+ 	    s[i] = entry ? SvIV(*entry) : 0;
+	  }
+          $var.samples = s;
+	}
+	else {
+	  /* non-magic would be preferable here */
+	  $var.samples = (const i_sample_t *)SvPVbyte($arg, $var.count);
+	  if ($var.count == 0)
+	    croak(\"$pname: no samples provided in $var\");
+	}
+
+T_IM_FSAMPLE_LIST
+	SvGETMAGIC($arg);
+	if (!SvOK($arg))
+	  croak(\"$var must be a scalar or an arrayref\");
+	if (SvROK($arg)) {
+	  i_img_dim i;
+	  AV *av;
+	  i_fsample_t *s;
+	  if (SvTYPE(SvRV($arg)) != SVt_PVAV)
+	    croak(\"$var must be a scalar or an arrayref\");
+	  av = (AV *)SvRV($arg);
+          $var.count = av_len(av) + 1;
+          if ($var.count < 1)
+	    croak(\"$pname: no samples provided in $var\");
+	  s = malloc_temp(aTHX_ sizeof(i_fsample_t) * $var.count);
+ 	  for (i = 0; i < $var.count; ++i) {
+	    SV **entry = av_fetch(av, i, 0);
+ 	    s[i] = entry ? SvNV(*entry) : 0;
+	  }
+          $var.samples = s;
+	}
+	else {
+	  /* non-magic would be preferable here */
+	  $var.samples = (const i_fsample_t *)SvPVbyte($arg, $var.count);
+	  if ($var.count % sizeof(double))
+	    croak(\"$pname: $var doesn't not contain a integer number of samples\");
+          $var.count /= sizeof(double);
+	  if ($var.count == 0)
+	    croak(\"$pname: no samples provided in $var\");
+	}
+
+T_AVARRAY
+	STMT_START {
+		SV* const xsub_tmp_sv = $arg;
+		SvGETMAGIC(xsub_tmp_sv);
+		if (SvROK(xsub_tmp_sv) && SvTYPE(SvRV(xsub_tmp_sv)) == SVt_PVAV){
+		    AV *xsub_tmp_av = (AV*)SvRV(xsub_tmp_sv);
+		    STRLEN xsub_index;
+		    size_$var = av_len(xsub_tmp_av) + 1;
+		    $var = $ntype(size_$var);
+		    for (xsub_index = 0; xsub_index < size_$var; ++xsub_index) {
+		        SV **sv = av_fetch(xsub_tmp_av, xsub_index, 0);
+			if (sv) {
+			  ${var}[xsub_index] = Sv${(my $ntt = $ntype) =~ s/Ptr$//; \(ucfirst $ntt)}(*sv, \"$pname\");
+                        }
+		    }
+		}
+		else{
+		    Perl_croak(aTHX_ \"%s: %s is not an ARRAY reference\",
+				${$ALIAS?\q[GvNAME(CvGV(cv))]:\qq[\"$pname\"]},
+				\"$var\");
+		}
+	} STMT_END
+
+#############################################################################
+OUTPUT
+
+T_OFF_T
+	$arg = i_new_sv_off_t(aTHX_ $var);

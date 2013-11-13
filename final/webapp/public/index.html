@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html" charset="utf-8">
+    <title>Isucon3Final</title>
+    <link rel="shortcut icon" href="/favicon.ico" type="image/vnd.microsoft.icon" />
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.min.css">
+    <link rel="stylesheet" href="/css/jquery-ui-1.10.3.custom.min.css">
+    <style>
+      body {
+        padding-top: 60px;
+      }
+      div.timeline {
+        clear: both;
+      }
+      #main_view {
+        width: 876px;
+      }
+      #user_name {
+        font-size: 32px;
+        font-weight: bold;
+        padding-right: 2em;
+        padding-left: 0.5em;
+      }
+      div.entry {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        float:left;
+        height: 160px;
+        width: 128px;
+        padding: 0;
+        text-align: left;
+        overflow: hidden;
+        white-space: nowrap;
+        margin: 2px;
+      }
+      .follow_user, .unfollow_user {
+        cursor: pointer;
+      }
+      .unfollow_user img {
+        border: 1px solid #ccc;
+      }
+      .dialog {
+        display: none;
+      }
+    </style>
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <script src="/js/jquery.upload-1.0.2.js"></script>
+    <script src="/js/jquery.cookie.js"></script>
+    <script src="/js/jquery.tmpl.js"></script>
+    <script src="/js/jquery-ui-1.10.3.custom.min.js"></script>
+    <script src="/js/app.js"></script>
+    <script id="entry_template" type="text/x-jquery-tmpl">
+      <div class="entry">
+        <a href="${image}" target="_blank"><img src="${image}?size=s" width="128" height="128">${comment}</a>
+        <br>
+        <a class="follow_user" data-userid="${user.id}" data-username="${user.name}"><img src="${user.icon}" width="32" height="32"> ${user.name}</a>
+      </div>
+    </script>
+
+    <script id="following_template" type="text/x-jquery-tmpl">
+      <a class="unfollow_user" data-userid="${id}" data-username="${name}"><img src="${icon}" width="32" height="32" title="${name}"></a>
+    </script>
+
+  </head>
+  <body>
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="/">Isucon3Final</a>
+          <div class="nav-collapse">
+            <ul class="nav">
+              <li class="active"><a href="/">Home</a></li>
+            </ul>
+          </div> <!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div id="signup_form" title="Signup">
+        name <input type="text" id="signup_name" placeholder="[a-zA-Z0-9]{2,16}">
+      </div>
+      <div id="main_view">
+        <h3 id="head_user"><img id="user_icon"> <span id="user_name"></span>
+          following <span id="following"></span>
+        </h3>
+        <div>
+          <button id="show_api_key">show api_key</button> <span id="api_key_view"></span>
+        </div>
+        <h3 id="head_icon">Icon</h3>
+        <div>
+          <input type="file" id="icon_file" name="image">
+          <br>
+          <button id="icon_post">Change</button>
+        </div>
+
+        <h3 id="head_post">Post</h3>
+        <div>
+          <input type="file" id="entry_image" name="image">
+          <br>
+          Publush Level
+          <select name="entry_publish_level" id="entry_publish_level">
+            <option value="0">Private</option>
+            <option value="1">Followers only</option>
+            <option value="2">Public</option>
+          </select>
+          <br>
+          <button id="entry_post">Post</button>
+        </div>
+        <h3 id="head_timeline">Timeline
+          <span id="loading"><img src="/img/loading.gif"></span>
+          <span id="loading_error"></span>
+        </h3>
+        <div>
+          <div id="timeline">
+          </div>
+        </div>
+      </div>
+      <div id="signup_ok" title="Signup" class="dialog">
+        Success.
+      </div>
+      <div id="post_ok" title="Post" class="dialog">
+        Success.
+      </div>
+    </div> <!-- /container -->
+  </body>
+</html>

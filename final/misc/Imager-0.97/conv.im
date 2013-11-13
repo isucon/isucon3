@@ -1,0 +1,105 @@
+#define IMAGER_NO_CONTEXT
+#include "imager.h"
+#include "imageri.h"
+
+/*
+  General convolution for 2d decoupled filters
+  end effects are acounted for by increasing
+  scaling the result with the sum of used coefficients
+
+  coeff: (double array) coefficients for filter
+    len: length of filter.. number of coefficients
+           note that this has to be an odd number
+           (since the filter is even);
+*/
+
+int
+i_conv(i_img *im, const double *coeff,int len) {
+  i_img_dim xo, yo; /* output pixel co-ordinate */
+  int c, ch, center;
+  double pc;
+  double res[MAXCHANNELS];
+  i_img *timg;
+  dIMCTXim(im);
+
+  im_log((aIMCTX,1,"i_conv(im %p, coeff %p, len %d)\n",im,coeff,len));
+  im_clear_error(aIMCTX);
+
+  if (len < 1) {
+    im_push_error(aIMCTX, 0, "there must be at least one coefficient");
+    return 0;
+  }
+ 
+  center=(len-1)/2;
+
+  pc = 0;
+  for (c = 0; c < len; ++c)
+    pc += coeff[c];
+
+  if (pc == 0) {
+    i_push_error(0, "sum of coefficients is zero");
+    return 0;
+  }
+
+  timg = i_sametype(im, im->xsize, im->ysize);
+
+#code im->bits <= 8
+  IM_COLOR rcolor;
+  /* don't move the calculation of pc up here, it depends on which pixels
+     are readable */
+  for(yo = 0; yo < im->ysize; yo++) {
+    for(xo = 0; xo < im->xsize; xo++) {
+      for(ch = 0;ch < im->channels; ch++) 
+	res[ch] = 0;
+      for(c = 0;c < len; c++) {
+	i_img_dim xi = xo + c - center;
+	if (xi < 0)
+	  xi = 0;
+	else if (xi >= im->xsize)
+	  xi = im->xsize - 1;
+
+	if (IM_GPIX(im, xi, yo, &rcolor)!=-1) {
+	  for(ch = 0; ch < im->channels; ch++) 
+            res[ch] += (rcolor.channel[ch])  *coeff[c];
+	}
+      }
+      im_assert(pc != 0);
+      for(ch = 0; ch < im->channels; ch++) {
+        double temp = res[ch] / pc;
+        rcolor.channel[ch] = 
+          temp < 0 ? 0 : temp > IM_SAMPLE_MAX ? IM_SAMPLE_MAX : (IM_SAMPLE_T)temp;
+      }
+      IM_PPIX(timg, xo, yo, &rcolor);
+    }
+  }
+
+  for(xo = 0; xo < im->xsize; xo++) {
+    for(yo = 0;yo < im->ysize; yo++) {
+      for(ch =  0; ch < im->channels; ch++)
+	res[ch] = 0;
+      for(c = 0; c < len; c++) {
+	i_img_dim yi = yo + c - center;
+	if (yi < 0)
+	  yi = 0;
+	else if (yi >= im->ysize)
+	  yi = im->ysize - 1;
+	if (IM_GPIX(timg, xo, yi, &rcolor) != -1) {
+	  for(ch = 0;ch < im->channels; ch++) 
+	    res[ch] += (rcolor.channel[ch]) * coeff[c];
+	}
+      }
+      im_assert(pc != 0);
+      for(ch = 0;ch < im->channels; ch++) {
+	double temp = res[ch] / pc;
+	rcolor.channel[ch] = 
+	  temp < 0 ? 0 : temp > IM_SAMPLE_MAX ? IM_SAMPLE_MAX : (IM_SAMPLE_T)temp;
+      }
+      IM_PPIX(im, xo, yo,&rcolor);
+    }
+  }
+#/code
+
+  i_img_destroy(timg);
+
+  return 1;
+}

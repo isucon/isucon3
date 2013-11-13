@@ -1,0 +1,1958 @@
+Imager release history.  Older releases can be found in Changes.old
+
+Imager 0.97 - 15 Jul 2013
+===========
+
+No changes from 0.96_02.
+
+Imager 0.96_02 - 8 Jul 2013
+==============
+
+ - PNG: treat a version mismatch between headers and library as a
+   probe failure.
+   https://rt.cpan.org/Ticket/Display.html?id=86659
+
+ - PNG: the check for benign error support is more complex than a
+   simple library version check, check for the appropriate macro.
+   Thanks for Slaven Rezic for following up on my CPAN Testers result
+   queries.
+   https://rt.cpan.org/Ticket/Display.html?id=86659
+
+ - W32: add a missing head1 AUTHORS to the old Win32.pm
+   https://rt.cpan.org/Ticket/Display.html?id=86658
+
+Imager 0.96_01 - 1 Jul 2013
+==============
+
+ - TIFF: handle SampleFormat = 2 by translating the signed integer
+   values to unsigned by flipping their sign bits.
+
+   Handle SampleFormat = 3 where possible.
+
+   SampleFormat is ignored for paletted images.
+
+   Mixed SampleFormat are handled incorrectly, since libtiff returns
+   only the first SampleFormat value, and an image with both an alpha
+   channel and SampleFormat = 2 for color channels probably has a
+   different SampleFormat for the alpha channel.
+
+   https://rt.cpan.org/Ticket/Display.html?id=74540
+
+ - XS clean up:
+     https://rt.cpan.org/Ticket/Display.html?id=69243
+
+   - Imager::Color's rgba() method now returns its values as integers
+     instead of floating point. (IV instead of NV).
+
+   - The XS for i_map() and i_matrix_transform() now use the AV *
+     typemap instead of rolling their own.
+
+   - The XS for DSO_call() now uses the HV * typemap instead of
+     rolling it's own.
+
+   - The XS for i_poly_aa(), i_poly_aa_cfill(), i_transform() and
+     i_gradgen() now use a new T_AVARRAY typemap that greatly
+     simplifies the XS code.
+
+   - many other minor XS changes
+
+   - some XS code formatting
+
+ - TT (Freetype 1.x) and FT2 (Freetype 2.x) non-antialiased rendering
+   now renders in alpha-combining mode, to match antialiased output.
+   https://rt.cpan.org/Ticket/Display.html?id=73359
+
+ - add sample code and cookbook notes for drawing a blurred drop-shadow.
+
+ - add support for libpng 1.6, which changed the defaults for
+   reporting some types of error.
+   https://rt.cpan.org/Ticket/Display.html?id=85746
+
+ - FT2: use gsamp/psamp() to transfer pixels from the work image to
+   the output image instead of gpix/ppix.
+   https://rt.cpan.org/Ticket/Display.html?id=83478
+
+ - eliminate various GCC warnings, mostly initialized but otherwise
+   unused variables.
+
+Imager 0.96 - 19 May 2013
+===========
+
+ - rearrange Imager's test files.
+   https://rt.cpan.org/Ticket/Display.html?id=84596
+
+ - Imager::Probe::_gcc_lib_paths now forces C locale.
+   A sufficiently recent gcc prints localized keys for the search
+   paths, which avoids that localization.
+   https://rt.cpan.org/Ticket/Display.html?id=84963
+
+ - fix a pod error detected by Pod::Simple 3.27 and laterm and skip
+   pod tests unless AUTOMATED_TESTING or IMAGER_AUTHOR_TESTING is set
+   and true.
+   https://rt.cpan.org/Ticket/Display.html?id=85262
+   reported by Andreas König
+
+ - add a test for unclosed POD in C source, and fix the errors it
+   found.
+   https://rt.cpan.org/Ticket/Display.html?id=74875
+
+ - fix some spelling errors detected by the newer aspell in Debian
+   Wheezy.
+
+ - remove a trailing ' from lib/Imager/Font/Test.pm's POD
+   thanks to gregor herrmann <gregoa@debian.org>
+   https://rt.cpan.org/Ticket/Display.html?id=85413
+
+ - add a test for standard =head1 commands and fix the errors found
+
+Imager 0.95 - 19 Apr 2013
+===========
+
+ - handle the SVf_UTF8 flag correctly on magic strings passed to
+   Imager::IO's write() and raw_write() methods.
+   This may misbehave in perl 5.6.x since the UTF8 flag may not be
+   visible in the main SV after SvGETMAGIC().
+   https://rt.cpan.org/Ticket/Display.html?id=83438
+
+ - document that bounding_box() ignores the transformation matrix
+   supplied to tranform() for fonts.
+   https://rt.cpan.org/Ticket/Display.html?id=84106
+
+Imager 0.94_02 - 5 Apr 2013
+==============
+
+ - enable debug logging for the standard font tests
+
+ - skip the overloaded UTF-8 text output checks on 5.6.x and earlier,
+   due to a bug in that version of perl.
+
+ - don't test for read() failing on a write-only handle in 5.8.x and
+   earlier, this was fixed in change 862083f7e4 in perl.
+
+ - report the version of Inline found during testing (an attempt to
+   diagnose some intermittent failures.)
+
+Imager 0.94_01 - 2 Mar 2013
+==============
+
+ - NOTE: possibly backward incompatible:
+   support reading from/writing to perl filehandes that aren't raw
+   files.
+
+   This allows Imager's I/O to honour handles with layers such as
+   gzip, scalar file handles or tied file handles.
+
+   This is backward incompatible in that previous Imager would simply
+   use fileno() to retrieve the fd for the file and call write(2) etc
+   on it directly.
+   https://rt.cpan.org/Ticket/Display.html?id=78843
+
+ - moved most of README to lib/Imager/Install.pod which should make it
+   more accessible to the "web" generation, also significantly updated
+   and re-worked it.
+
+ - updated README's for the separately distributed modules to refer to
+   Imager::Install, and that they need -dev versions of packages
+   https://rt.cpan.org/Ticket/Display.html?id=81265
+
+ - the JPEG test code now reports the compile-time library version
+
+ - avoid a possible compiler optimization issue on CentOS 5.9 i386 by
+   rearranging (and mildly optimizing) some code.
+   https://rt.cpan.org/Ticket/Display.html?id=83212
+
+ - fix a POD error in Imager::Fill (detected on new Pod-Simple)
+   https://rt.cpan.org/Ticket/Display.html?id=83434
+
+ - fix a broken link to Graphics::Magick
+   https://rt.cpan.org/Ticket/Display.html?id=82743
+
+ - drawing text to a channel with FT2 would draw with random coverage
+   due to an uninitialized alpha channel.
+
+ - marked the function pointer underlying the mm_log() API with the
+   correct gcc magic and fixed the resulting warnings.
+
+ - fixed some other compiler warnings
+
+ - Imager::Font::W32 now properly reports text drawing errors
+   https://rt.cpan.org/Ticket/Display.html?id=70098
+
+ - handle the SVf_UTF8 flag correctly on magic (eg. overloaded)
+   strings passed as text to draw(), bounding_box(), has_chars(),
+   glyph_names() (where supported) in each of the font drivers.
+   This may misbehave in perl 5.6.x since the UTF8 flag may not be
+   visible in the main SV after SvGETMAGIC().
+   https://rt.cpan.org/Ticket/Display.html?id=83438 (partial)
+
+Imager 0.94 - 15 Dec 2012
+=========================
+
+Variations on some of these changes were included in development
+releases.
+
+ - improved thread safety
+   - the internal error stack and log file handle are now in a per-thread
+     context object
+   - JPEG now captures IPTC information in a thread-safe way
+   - avoid globals where possible for warning capture in libtiff
+   - use a mutex to avoid re-entering thread-unsafe giflib
+   - use a mutex to avoid re-entering thread-unsafe tifflib
+   - use a mutex to avoid re-entering thread-unsafe T1Lib
+   - use a library handle per thread for freetype 2.
+   - use an engine handle per thread for freetype 1.x.
+   - originally these changes broke ABI compatibility, this has been
+     restored.
+
+ - clarify the return value of getpixel();
+   https://rt.cpan.org/Ticket/Display.html?id=81198
+
+ - fixed a race condition in parallel testing for T1
+
+ - fixed a bug in handling yoff for untransformed image-based fills
+
+ - documentation improvements for Imager::Fill
+
+ - FT2: report the library version while testing.
+
+Imager 0.93 - 15 Oct 2012
+===========
+
+Bug fixes:
+
+ - previously a transparency enabled GIF write (the default) would
+   always use a GIF89a header even if none of the images were
+   transparent.
+
+ - previously the probe step for freetype-config would fail on cygwin
+
+ - catch an invalid matrix parameter to convert() instead of crashing
+   https://rt.cpan.org/Ticket/Display.html?id=79922
+
+ - remove the 16-bit/sample limitation from the documentation for
+   setsamples(), it hasn't applied for many releases.
+   https://rt.cpan.org/Ticket/Display.html?id=79989
+
+ - don't copy setsamples() data parameter, it may be a large scalar
+   https://rt.cpan.org/Ticket/Display.html?id=79990
+
+ - clean up .dSYM directories generated performing probes on OS X
+   Mountain Lion.
+
+ - pass the --verbose command-line option through to Imager::Probe in
+   sub-module's Makefile.PLs
+   https://rt.cpan.org/Ticket/Display.html?id=75878
+
+Enhancements:
+
+ - support for giflib 5.0. (5.0.1 and later)
+   https://rt.cpan.org/Ticket/Display.html?id=79029
+   The giflib API Imager uses doesn't have a mechanism to set the
+   header version in 5.0.0.
+
+ - update the GIF library probe code to check for the new giflib 5.0.1
+   EGifSetGifVersion() function, and to check for the giflib 4.2.0
+   uninitialized gif89 bug.
+   https://rt.cpan.org/Ticket/Display.html?id=79679
+   http://sourceforge.net/tracker/?func=detail&aid=3574283&group_id=102202&atid=631304
+
+ - avoid static variables when capturing IPTC data from JPEG files
+
+ - match Imager::Font;:T1's error message translations to those from
+   later versions of T1Lib.
+
+ - for libtiff versions that support extended warning handlers (3.8.0
+   or later), use them to avoid some global variables.
+
+ - note Image::ExifTool for better metadata support.
+   https://rt.cpan.org/Ticket/Display.html?id=79251
+
+Imager 0.92 - 14 Aug 2012
+===========
+
+ - giflib 4.2 eliminates the GIF_LIB_VERSION macro, handle that
+   correctly for both probing and runtime.
+   https://rt.cpan.org/Ticket/Display.html?id=77672
+
+ - allow building JPEG/imexif.c on C89 compilers.
+
+ - allow building GIF/imgif.c on C89 compilers.
+
+Imager 0.91 - 4 Jun 2012
+===========
+
+Bug fixes:
+
+ - The size of rotated images is no longer rounded up so aggressively.
+   Added rounding to the linear interpolation done for rotate() and
+   matrix_transform() for 1 and 3 channel 8-bit images.
+   Adjusted the two tranlate matrices used to build the final rotation
+   matrix to use the distance between the outlier pixels rather than
+   the pixel dimensions (ie. dimension-1).
+   With all of this the output of rotate(degrees => 270) on an 8-bit
+   image exactly matches the output of rotate(right => 270).
+   https://rt.cpan.org/Ticket/Display.html?id=77063
+
+Other changes:
+
+ - eliminate the old IIM_new(), IIM_DESTROY() names from Imager's
+   internals, those names only matter for the XS interface.
+
+ - improve error reporting when PERL_INITIALIZE_IMAGER_CALLBACKS finds
+   the API level compiled into a loadable module such as
+   Imager::File::GIF doesn't match that of Imager.  Previously it
+   could be difficult to determine exactly which module was failing to
+   load.
+   https://rt.cpan.org/Ticket/Display.html?id=77173
+
+ - added Imager->check_file_limits() as an interface to the
+   i_int_check_image_file_limits() API.
+
+ - Imager->set_file_limits(reset => 1) now resets the limits to the
+   defaults rather than setting them all to unlimited.
+
+ - wrote a brief security note as Imager::Security
+   https://rt.cpan.org/Ticket/Display.html?id=68910
+
+Imager 0.90 - 30 Apr 2012
+===========
+
+Bug fixes:
+
+ - Imager::Test::is_imaged() attempted to process an "epsilon"
+   parameter but the prototype didn't allow for the extra parameter.
+   Corrected the prototype.
+
+ - when downconverting samples (eg. from floating point to 8 bit)
+   Imager now rounds the sample value rather than attempting to
+   allocate input values over output values equally.  The old
+   behaviour had the probably surprising effect of converting a
+   floating point 2.1/255.0 into an 8-bit 3 rather than the expected
+   2.
+   This may result in slightly different 8 or 16-bit output images.
+
+ - BI_BITFIELD BMP images were handled incorrectly, both in
+   incorrectly calculating the space required for the masks and in
+   processing the image data itself.
+   https://rt.cpan.org/Ticket/Display.html?id=76736
+
+ - some odd width BMP BI_RLE4 images use run lengths that run one off
+   the edge of the image.  Imager now allows this, discarding the
+   extra column.
+
+ - odd length RLE4 runs in BMP images were decoded incorrectly.
+
+ - pkg-config could sometimes return a library that was in a directory
+   EU::MM / $Config{libpth} doesn't know about, but the compiler did.
+   If no -L is included in the pkg-config library information check if
+   EU::MM can find the library, and if not, search our configured
+   directories and insert that into the library flags.
+   https://rt.cpan.org/Ticket/Display.html?id=75869
+
+ - Imager::Probe can now probe for libraries with dependent libraries,
+   common for static linking, eg. libpng requires libz.
+   https://rt.cpan.org/Ticket/Display.html?id=74043
+
+ - libpng 1.5 specific probes were looking for libpng 1.4 filenames.
+
+ - added alternative probe configurations that try to link libz, to
+   handle a statically linked libpng.
+   https://rt.cpan.org/Ticket/Display.html?id=74043
+
+ - if a probe includes testcode, Imager::Probe now checks that code as
+   part of the process of checking each configuration rather than as a
+   post test of the found configuration.  This allows alternate
+   configurations to be checked if a matching but non-working
+   configuration is found.
+   https://rt.cpan.org/Ticket/Display.html?id=74043
+
+Other changes:
+
+ - when reading or writing images via callbacks, the default callbacks
+   now push an error message indicating that a required callback was
+   called but not supplied.
+   https://rt.cpan.org/Ticket/Display.html?id=76782
+
+ - clarify which callbacks are required for reading and writing TIFF
+   images.
+
+ - improve logging for creation of callback I/O layers.
+
+ - a little more documentation for Imager::Probe.
+
+ - the i_get_file_background() and i_get_file_backgroundf() APIs now
+   return int to indicate whether the i_background tag was found.
+
+ - PNG rework
+   - improve error reporting
+   - add png_interlace, png_bits tags
+   - read paletted images as paletted images, including transparency
+   - read 1 bit greyscale images as a type suitable for other file
+     handlers to write as bilevel
+   - read 16 bit/sample PNG as 16-bit/sample Imager images
+   - write "bilevel" paletted images as 1 bit grayscale images
+   - write paletted images as paletted images
+   - write 16-bit (or higher)/sample images as 16-bit/sample PNG
+     images
+   - improved metadata support
+   https://rt.cpan.org/Ticket/Display.html?id=29268
+
+Imager 0.89 - 18 Mar 2012
+===========
+
+Bug fixes:
+
+ - getpixel(..., type => "float") and the API i_gpixf() have been
+   broken on paletted images since they were implemented.
+   https://rt.cpan.org/Ticket/Display.html?id=75258
+
+Other changes:
+
+ - links in the METHOD INDEX now point at the method documentation
+   rather than the heading you can find them under.
+   https://rt.cpan.org/Ticket/Display.html?id=71495
+
+ - Imager (and the bundled dynamic modules) no longer fallback to
+   using DynaLoader if loading via XSLoader fails.
+   For the bundled modules this could hide useful error messages.
+   https://rt.cpan.org/Ticket/Display.html?id=75560
+
+ - IM_DEBUG_MALLOC mymalloc() no longer sn?printfs() a string to a
+   buffer in the array of allocations, but just stores the filename
+   pointer and line number.
+   https://rt.cpan.org/Ticket/Display.html?id=70388
+
+Imager 0.88 - 22 Feb 2012
+===========
+
+ - describe how to build libgif etc on OS X in such a way as to be
+   compatible with a fat binary perl (such as the system perl), in
+   README.
+   https://rt.cpan.org/Ticket/Display.html?id=73371
+
+ - update the change notes for 0.77_01 to indicate that libungif
+   support was removed.
+
+ - add some other imaging modules to SEE ALSO
+   https://rt.cpan.org/Ticket/Display.html?id=73906
+
+ - note that the generator of the apparently non-DFSG-free postscript
+   in MMOne.pfb is a Debian package.
+
+ - setsamples() is now a true complement to getsamples() - it can
+   write 8-bit or floating point samples from a scalar or array
+   reference.  This adds i_psamp() and i_psampf() to the C level API.
+
+ - the XS interfaces to i_gsamp(), i_gsampf() and i_gsamp_bits() have
+   changed to make better use of the typemap, but these aren't part of
+   the perl level API anyway.  There were no changes to the C level
+   interfaces to these functions.
+
+ - getpixel() and setpixel() now accept a mix of scalar and array
+   references for the x and y parameters, and unequal array lengths is
+   no longer an error.
+   https://rt.cpan.org/Ticket/Display.html?id=73697
+
+Bug fixes:
+
+ - correctly calculate the size of a rotated image
+   https://rt.cpan.org/Ticket/Display.html?id=69261
+
+ - fix incorrect rounding of color values for matrix_transform() and
+   rotate().
+   https://rt.cpan.org/Ticket/Display.html?id=69261
+
+ - Win32 text output is now done in normal combine mode, the alpha
+   component of the color is now significant.
+   https://rt.cpan.org/Ticket/Display.html?id=70014
+
+ - remove long unused gif case from read()
+   https://rt.cpan.org/Ticket/Display.html?id=69244 (partial)
+
+ - the getsamples() target parameter was being treated as a hashref
+   when it's meant to be an array reference.
+   https://rt.cpan.org/Ticket/Display.html?id=74882
+
+ - getpixel() and setpixel() now returns an empty list when invalid
+   parameters are supplied.
+   Invalid values for type now result in an error for getpixel().
+   https://rt.cpan.org/Ticket/Display.html?id=73697
+
+Imager 0.87 - 03 Jan 2012
+===========
+
+ - document the return value of the filter() method.
+   https://rt.cpan.org/Ticket/Display.html?id=72369
+
+ - document i_gsamp_bits() and i_psamp_bits().
+   https://rt.cpan.org/Ticket/Display.html?id=68815
+
+ - properly increment the Imager::Matrix2d $VERSION.
+
+ - actually include the Imager::Test tests in the dist
+
+ - correctly read and write 256x256 pixel ICO files
+   https://rt.cpan.org/Ticket/Display.html?id=69599
+
+ - make the error message from read() or read_multi() when they can't
+   identify the file type match reality.
+   https://rt.cpan.org/Ticket/Display.html?id=72475
+
+ - read() now uses $FORMATGUESS if it can't determine the file type
+   based on the file header, to match read_multi().
+
+ - re-work and add tests for def_guess_type().  def_guess_type() no
+   longer returns any random file extension as the file type.
+
+ - add gray4, gray16 and gray as presets for make_colors.
+   https://rt.cpan.org/Ticket/Display.html?id=67911
+
+ - add make_palette() method that produces a palette from one or more
+   images.
+
+ - fix the Imager dependency for the separately distributed font
+   drivers.
+   https://rt.cpan.org/Ticket/Display.html?id=72643
+
+ - fix i_render_color() to properly draw in "normal" mode - ie. when
+   writing to a 1 or 3 channel image the second or fourth channel of
+   the source color was being ignored, it is now significant.
+   https://rt.cpan.org/Ticket/Display.html?id=71564
+
+Imager 0.86 - 31 Oct 2011
+===========
+
+ - improve error reporting for W32 tests
+
+Imager 0.85_02 - 24 Oct 2011
+==============
+
+Bug fixes:
+
+ - eliminate unused i_gif_opts type (clean-up)
+   https://rt.cpan.org/Ticket/Display.html?id=69245
+
+ - fix combine=0 fill color anti-aliasing on the double/sample path
+   https://rt.cpan.org/Ticket/Display.html?id=71309
+
+ - make default text color non-transparent
+   https://rt.cpan.org/Ticket/Display.html?id=71469
+
+ - apply the last of the Debian unforwarded spelling fixes
+   https://rt.cpan.org/Ticket/Display.html?id=70656
+
+ - the log() method used its message parameter as a C level format
+   string.
+   https://rt.cpan.org/Ticket/Display.html?id=71653
+
+ - provide our own STRLEN typemap entry for older perls.
+   https://rt.cpan.org/Ticket/Display.html?id=71641
+
+ - add extra ppport.h configuration to support older perls.
+
+ - depend on Scalar::Util, since we use it and older perls don't have
+   it.
+
+ - add overloaded eq to Imager::Matrix2d, since older perls don't seem
+   to synthesize it from overloaded "".
+
+  - use T1_StrError() for error messages on modern libt1
+    https://rt.cpan.org/Ticket/Display.html?id=69879
+
+ - actually load the font rather than just adding it to the catalog on
+   creation.
+
+ - Imager::Font->new now produces better error messages for the T1
+   engine.
+
+ - the font has_chars() method now returns perl's true and false
+   values in list context rather than integers, which should be more
+   efficient.
+   https://rt.cpan.org/Ticket/Display.html?id=69158
+
+ - the btm data structure used by the flood_fill code is now
+   initialized more efficiently.
+   https://rt.cpan.org/Ticket/Display.html?id=68994
+
+ - updated the Thanks list in README
+   https://rt.cpan.org/Ticket/Display.html?id=71607
+
+ - check there's at least one coefficient for the convolution filter
+   https://rt.cpan.org/Ticket/Display.html?id=68993
+
+ - make the APIRef synopsis ordering consistent, older versions of
+   perl could order it differently.
+   https://rt.cpan.org/Ticket/Display.html?id=71675
+
+ - we rely on Config.pm's d_vsnprintf as to whether we use
+   vsnprintf/snprintf, which is defined in the Win32 Config.pm even
+   though it only has _ prefixed versions of these.  Define our own
+   prefixed names on Win32.
+   https://rt.cpan.org/Ticket/Display.html?id=71642
+
+ - fix library detection with MSVC
+
+ - search a few more library directories, so EU::MM doesn't discard
+   them.  Hopefully fixes:
+   https://rt.cpan.org/Ticket/Display.html?id=71643
+
+Imager 0.85_01 - 10 Oct 2011
+==============
+
+ - add simple tests for the Imager::Test test_image generators
+
+ - io_glue I/O buffering re-work:
+
+   - reorganize io_glue to do it's own buffering by default
+
+   - the unbuffered functions are available as i_io_raw_read() (or
+     raw_read() from perl) etc but are not recommended for typical
+     use.
+
+   - use the new i_io_peekn() when checking for file magic to avoid
+     seek, allowing Imager to detect the file type and read the file
+     from an unseekable stream (for formats that don't use random
+     access)
+
+   - added several new I/O layer API functions.
+
+   - fix the TGA performance problem, most noticably on Win32
+     https://rt.cpan.org/Ticket/Display.html?id=70037
+
+   - TIFF now uses wrapper functions of the correct types to avoid casts
+     https://rt.cpan.org/Ticket/Display.html?id=69912
+
+   - the callback IO object did its own buffering, controlled by the
+     maxbuffer parameter supplied to the read() and write() methods.
+     This buffering has been removed, to avoid redundancy with the
+     common io_glue buffering.  This also avoids a bug in that code
+     which could rarely pass a zero length to the read callback and
+     then panic about the result.
+
+   - the callback IO object now tests the result of calling the close
+     callback, which should return true for success.
+
+   - the PNM reader did its own buffering.  This buffering has been
+     removed to avoid redundancy with the common io_glue buffering.
+
+   - previously the read handlers for fd and callback I/O layers would
+     call the underlying interface (POSIX read or your supplied callback)
+     until it filled the buffer.  It now only makes one call.
+
+   - added public constructors for I/O layer objects (see Imager::IO)
+
+   - all core file handlers now use the i_io_foo() wrappers to gain
+     access to buffered I/O rather than calling the I/O layer
+     callbacks directly.
+
+   - all core file handlers now check for error on close.
+
+   - Backward compatibility: if you hava custom file handlers, you can
+     use i_io_write() etc since they're available as macros in older
+     versions of Imager.
+
+   - eliminate the final remnants of io_glue_commit_types().
+
+   - bump IMAGER_API_VERSION, since the above may break assumptions.
+
+ - removed the long unused i_gen_reader() and i_gen_writer() utility
+   functions.
+
+Imager 0.85 - 29 Aug 2011
+===========
+
+The main changes in the release versus 0.84 are:
+
+ - on 64-bit systems, 64-bit types are consistently used for image
+   dimensions and co-ordinated, and for memory block sizes.
+
+ - handle IFD loops in TIFF files correctly.  Previously this would
+   lead to an infinite loop.
+
+Bug fixes:
+
+ - fix the link in the getheight() entry in the method index
+
+Imager 0.84_02 - 22 Aug 2011
+==============
+
+Development release, this will become 0.85 if CPAN testers is
+favourable.
+
+Bug fixes:
+
+ - the image file limits set by set_file_limits() weren't being
+   checked when reading TIFF files.
+   https://rt.cpan.org/Ticket/Display.html?id=69915
+
+ - Provide more information about file format module load errors on a
+   failed image file read() or write().
+   https://rt.cpan.org/Ticket/Display.html?id=69194
+
+ - use TIFFReadDirectory() instead of TIFFSetDirectory() to iterate
+   through TIFF images, since it checks for IFD loops.
+   https://rt.cpan.org/Ticket/Display.html?id=69914
+
+ - don't leak memory when out of range palette indexes are supplied to
+   setscanline().
+   https://rt.cpan.org/Ticket/Display.html?id=69242
+
+ - require a later version of CPAN::Meta to ensure JSON::PP and
+   CPAN::Meta::YAML are available.
+   https://rt.cpan.org/Ticket/Display.html?id=69008
+
+ - hoist the per-line calculations for the flines implementations, and
+   modernize the tests a bit.
+   https://rt.cpan.org/Ticket/Display.html?id=70126
+
+ - detect snprintf()/vsnprintf() (cheat by using Config.pm) and use
+   them when available.
+   https://rt.cpan.org/Ticket/Display.html?id=69147
+
+ - if t1lib failed to reinitialize it would be left as marked
+   initialized.
+   https://rt.cpan.org/Ticket/Display.html?id=69877
+
+ - update the bundled (and still modified) Devel::CheckLib
+   https://rt.cpan.org/Ticket/Display.html?id=69170
+
+Imager 0.84_01 - 8 Aug 2011
+==============
+
+Development release as a sanity check for the types re-work.
+
+Massive types re-work:
+
+ - the type used internally for pixel co-ordinates and image sizes is
+   now 64-bit on 64-bit platforms (at least sane ones).
+
+ - size_t is now used consistently for memory block sizes.
+
+ - since this changes the binary interface, the Imager API version has
+   been incremented.  Any module that uses the API will need to be
+   rebuilt.  In most cases that will be enough, but calls to any APIs
+   that take a pointer to image sizes may need source changes.
+
+ - you should be able to create very large images on 64-bit systems,
+   if you have enough memory.  Successfully created a 32768 x 49192 x
+   3 channel image, filled with a tiled image and scaled it.  The
+   unscaled image was also successfully saved to a JPEG.
+
+ - check the image size before attempting to write BMP, GIF, JPEG,
+   PNG, SGI, TGA, TIFF images.
+
+ - correctly handle reading TGA images over 32767 pixels wide or tall.
+
+Incidental changes:
+
+ - the gif_left and gif_top tags are now clamped to non-negative
+   values when writing a GIF image.
+
+ - removed dead callback read/write code
+
+The default maximum memory size when reading files is now 1G.
+
+Imager 0.84 - 20 Jun 2011
+===========
+
+ - Imager no longer inherits from Exporter (unless you're running an
+   old, old perl.
+
+ - Imager can now write progressive JPEGs (it could always read them).
+   https://rt.cpan.org/Ticket/Display.html?id=68691
+
+Bug fixes:
+
+ - re-work, document and test Imager's logging facility.
+   https://rt.cpan.org/Ticket/Display.html?id=65227
+
+ - fix META.yml testing and the generated META.yml
+   https://rt.cpan.org/Ticket/Display.html?id=65235
+
+ - test and add error reporting to to_*() family methods
+
+ - add to_rgb_double() method.
+   https://rt.cpan.org/Ticket/Display.html?id=65101
+
+ - Imager no longer exports anything by default
+   https://rt.cpan.org/Ticket/Display.html?id=65228
+
+ - convert colors to grayscale if the supplied (or generated) palette
+   contains only grays when performing error diffusion color
+   translation.
+   https://rt.cpan.org/Ticket/Display.html?id=68508
+
+ - writing a paletted image to GIF wouldn't always use the colors
+   supplied (or generated, eg. via make_colors => "mono"), which was
+   confusing at best.
+   https://rt.cpan.org/Ticket/Display.html?id=67912
+
+ - replace (imager|tony)@imager.perl.org in the doc, since I don't
+   plan to continue receiving mail at that address.
+   https://rt.cpan.org/Ticket/Display.html?id=68591
+
+Imager 0.83 - 21 May 2011
+===========
+
+Bug fixes:
+
+ - diag() the error message on failure for some TIFF tests that are
+   failing on a Solaris smoker.
+   http://www.cpantesters.org/cpan/report/6396db1e-8090-11e0-9682-112b785ebe45
+
+Imager 0.82_01 - 17 May 2011
+==============
+
+Dev release, in case the compose tests are too sensitive.
+
+Bug fixes:
+
+ - Imager::Font::T1 incorrectly checked for absolute filename under
+   Win32.  Thanks to kmx for the report and fix.
+   https://rt.cpan.org/Ticket/Display.html?id=67963
+
+ - compose() with the target, source or mask position off the top or
+   left of the target image didn't clip the source image correctly.
+   https://rt.cpan.org/Ticket/Display.html?id=67220
+
+ - compose() now returns a useful error message on a non-positive
+   opacity.
+
+ - compose.im now at 100% test coverage. (As opposed to, umm, much,
+   much less.)
+
+Imager 0.82 - 14 Mar 2011
+===========
+
+Bug fixes:
+
+ - eliminate calls to i_has_format() from the test suite, since it's
+   no longer a useful way to check for file format support.  Eliminate
+   i_has_format() from the functions exposed via XS.
+   https://rt.cpan.org/Ticket/Display.html?id=65863
+
+ - eliminate calls to note(), which isn't in the (very old) version of
+   Test::More we have as a pre-requisite.  note() is modern enough
+   that I don't feel a need to require a Test::More upgrade for it.
+   https://rt.cpan.org/Ticket/Display.html?id=65864
+
+ - skip the threads tests on Test::More 2.00_*
+   https://rt.cpan.org/Ticket/Display.html?id=65812
+
+ - add an (unshipped) test to check Imager's internal POD links
+   https://rt.cpan.org/Ticket/Display.html?id=65749
+
+ - improve the library detection summary
+   https://rt.cpan.org/Ticket/Display.html?id=9675
+
+ - increase the version of Imager::Font::Type1 so that upgrades don't
+   downgrade the version in this file.
+   https://rt.cpan.org/Ticket/Display.html?id=66250
+
+ - if we see an -rpath (or -R) option in $Config{lddlflags} supply
+   that option for the directories that would normally go in
+   LD_RUN_PATH.  Typically an explicit -rpath overrides LD_RUN_PATH.
+   https://rt.cpan.org/Ticket/Display.html?id=65955
+
+Imager 0.81 - 14 Feb 2011
+===========
+
+ - added coverage tests for masked images (maskimg.c @100% test coverage)
+
+ - add hsv() method to Imager::Color
+   Thanks to Leolo (Philip Gwyn)
+   https://rt.cpan.org/Ticket/Display.html?id=65385
+
+ - split libt1 Type 1 font support into a sub-module
+   https://rt.cpan.org/Ticket/Display.html?id=49616 (partial)
+
+ - add a preload() class method for use in forking servers, and to
+   work around limitations in PAR.
+   https://rt.cpan.org/Ticket/Display.html?id=65665
+
+Bug fixes:
+
+ - paletted writes to a masked image are now masked correctly.
+   Revealed by new coverage tests.
+
+ - update the filter plugin documentation.
+   https://rt.cpan.org/Ticket/Display.html?id=56513
+
+ - add the matrix() method to Imager::Matrix2d to allow creation of a
+   matrix with specified co-efficients.  You can now multiple an
+   Imager::Matrix2d object by a 9 element array ref or a number.
+   https://rt.cpan.org/Ticket/Display.html?id=29938
+
+ - really fix loading TTF fonts with FT2 when FT1 isn't available.
+   Thanks to Leolo (Philip Gwyn)
+   https://rt.cpan.org/Ticket/Display.html?id=65386
+   https://rt.cpan.org/Ticket/Display.html?id=62855
+
+ - make sure each test script that needs testout/ creates it.
+   https://rt.cpan.org/Ticket/Display.html?id=65088
+
+ - handle a slightly different warning from libtiff 4.x
+   https://rt.cpan.org/Ticket/Display.html?id=65268
+
+ - the sat transform2() op returned an incorrect saturation.
+   https://rt.cpan.org/Ticket/Display.html?id=65391
+
+Imager 0.80 - 17 Jan 2011
+===========
+
+ - added coverage tests for Imager::Fountain and Imager::Color::Float
+
+ - Imager is now maintained in git
+   http://git.imager.perl.org/imager.git
+   git://git.imager.perl.org/imager.git
+
+Bug fixes:
+
+ - images with an translucent alpha channel were not scaled correctly
+   by the default (qtype=normal) scaling method.
+   https://rt.cpan.org/Public/Bug/Display.html?id=63922
+
+ - Imager::Color::Float now translates "#FFFFFF" to white instead of
+   just a little darker.
+
+ - make the default color map build algorithm "mediancut".  This
+   changes the default color map builder for writing GIFs back to what
+   it was in 0.77, reverting a performance regression.
+   https://rt.cpan.org/Ticket/Display.html?id=64785
+
+ - handle failure to create a masked image correctly
+
+Imager 0.79 - 10 Dec 2010
+===========
+
+ - add Imager::Test to the POD coverage tests and document the missing
+   functions.
+
+ - the convert() method now optimizes the case where all output
+   channels are either 0, sourced from a single input channel or 1.
+   This significantly speeds up presets like "addalpha", "green".
+   https://rt.cpan.org/Ticket/Display.html?id=51254
+
+ - add wiggle.pl sample, as suggested by Dan Oppenheim.
+
+ - add the combine() method to combine channels from multiple source
+   images into a new image
+   https://rt.cpan.org/Ticket/Display.html?id=11872
+
+Bug fixes:
+
+ - treat the co-efficients for convert() as doubles instead of floats.
+
+ - If a higher (earlier) priority font handler failed to load, that
+   would crash preventing loading of later font handlers.
+   https://rt.cpan.org/Ticket/Display.html?id=62855
+
+ - parse defines from the options returned by pkg-config --cflags
+   https://rt.cpan.org/Ticket/Display.html?id=63223
+
+ - a regen of the MANIFEST revealed that GIF and FT2 tests weren't
+   included in the tarball.  They are now included.
+
+Imager 0.78 - 4 Oct 2010
+===========
+
+Bug fixes:
+
+ - don't access deprecated members of the png_structp.
+   https://rt.cpan.org/Ticket/Display.html?id=60242
+
+ - document that using color objects is faster than supplying colors
+   by name, etc.
+   https://rt.cpan.org/Ticket/Display.html?id=61047
+
+ - Imager::Probe now accepts array references for incpath and libpath.
+   https://rt.cpan.org/Ticket/Display.html?id=60244
+
+Imager 0.77_02 - 27 Sep 2010
+==============
+
+ - moved Win32, FreeType 2 font support into sub-modules.
+   https://rt.cpan.org/Ticket/Display.html?id=49616 (partial)
+   Uses Imager::Probe now.
+   https://rt.cpan.org/Public/Bug/Display.html?id=61328
+
+ - tested successfully with jpeg-8b
+   https://rt.cpan.org/Ticket/Display.html?id=60221
+
+Bug fixes:
+
+ - from _01: look for missing file support test files in the right
+   places.
+
+ - flood_fill() wouldn't fill the right side of a single scan-line
+   fill area.
+   Thanks to Nicolas Roggli for reporting this.
+
+ - flood_fill wouldn't fill to the left edge of the image if the
+   starting line didn't reach the left edge.
+   Thanks to Nicolas Roggli for reporting this.
+
+Imager 0.77_01 - 13 Sep 2010
+==============
+
+ - add each library-directory/pkgconfig/ to the pkg-config search path
+   in Imager::Probe.
+   Thanks to Justin Davis.
+   https://rt.cpan.org/Ticket/Display.html?id=60491
+
+ - moved GIF, TIFF, JPEG file handling code into sub-modules in
+   preparation for separate distribution.
+   https://rt.cpan.org/Ticket/Display.html?id=49616 (partial)
+
+   Note: this removed support for libungif from Imager.
+
+ - optimize filled box drawing (color, not fill)
+
+Bug fixes:
+
+ - Imager::Probe was calling ExtUtils::Liblist to initialize
+   LD_RUN_PATH supplying an undefined value rather than the found
+   directory.  Thanks to Justin Davis.
+   https://rt.cpan.org/Ticket/Display.html?id=60491
+
+ - only prepend ./ to font filenames when passing them to T1Lib and
+   then only when it would use its search mechanisms.
+   https://rt.cpan.org/Ticket/Display.html?id=60509
+
+ - fix the cache check for the X rgb.txt loader.  This is typically
+   used for color translation on Unix-like systems, and the fix
+   improves performance of supplying colors by name by about 80 times.
+   Test code that managed 3400 10x10 pixel boxes/second sped up to
+   25700 boxes/second.
+
+ - clarify that Imager doesn't write EXIF metadata to images.
+   https://rt.cpan.org/Ticket/Display.html?id=60637
+
+ - Imager::Probe can now search subdirectories under its include path.
+   Used by the PNG Makefile.PL to find headers and libraries when they
+   aren't in the base directory, as in cygwin.
+   https://rt.cpan.org/Ticket/Display.html?id=60635
+
+Imager 0.77 - 11 Aug 2010
+===========
+
+I don't want Imager::File::PNG indexed as part of Imager, but forgot
+to update the META.yml before updating the version.
+
+ - don't index Imager::File::PNG as part of Imager
+
+ - add resources to META.yml
+
+Imager 0.76 - not released
+===========
+
+Bug fixes:
+
+ - the align_string() method would ignore a string of "0" due to a
+   mis-use of C< ||= >.
+   Thanks to Maurice Height for reporting this.
+   https://rt.cpan.org/Ticket/Display.html?id=60199
+
+Imager 0.75_03 - 09 Aug 2010
+==============
+
+Bug fixes:
+
+ - read_types() and write_types() would include png when it wasn't
+   available due to a problem with the %formats tie
+
+ - handle dependent libraries correctly (eg -lpng requiring -lz) in
+   the code run phase of library probing.
+
+Imager 0.75_02 - 07 Aug 2010
+==============
+
+Bug fixes:
+
+ - add file missing from MANIFEST, which was causing TIFF failures.
+
+Imager 0.75_01 - 06 Aug 2010
+==============
+
+Test release for the new PNG probe.
+
+ - added the ability to read multiple-image PNM files.
+   Note that unlike the pbm/pgm/ppm specification this accepts mixed
+   format files and allows white space padding between files.
+   Thanks to Philip Gwyn (Leolo) for this patch.
+
+ - moved the PNG file handling code into a sub-module in preparation
+   for separate distribution.
+   https://rt.cpan.org/Ticket/Display.html?id=49616 (partial)
+   Also helps avoid complications from -I/-L compile/link options from
+   other libraries.
+
+Bugs:
+
+ - Imager->new(data => $data) didn't try to process image file data in
+   $data
+   https://rt.cpan.org/Ticket/Display.html?id=58761
+
+ - t/t50basicoo.t no longer depends on the other tests to generate its 
+   input files.
+   https://rt.cpan.org/Ticket/Display.html?id=9798
+   Also, it wasn't testing pnm (pnm vs ppm mix-up)
+
+ - update the documentation of hardinvert to match the change in 0.62.
+   https://rt.cpan.org/Ticket/Display.html?id=59785
+
+ - added hardinvertall filter which also inverts the alpha channel
+   (sorry for the mess)
+
+ - when probing for TIFF, set LD_RUN_PATH just as the Makefile does so
+   the probe can find the library for the test run.
+   https://rt.cpan.org/Ticket/Display.html?id=57518
+
+Imager 0.75 - 20 Jun 2010
+===========
+
+ - use PERL_NO_GET_CONTEXT to slightly improve performance on threaded
+   perls (not measured)
+
+Bugs:
+
+ - an opacity fill based on a fountain fill would segfault when
+   filling an 8-bit/sample image.
+
+ - merge thickline branch polygon fix
+   https://rt.cpan.org/Ticket/Display.html?id=43518
+
+Imager 0.74 - 7 May 2010
+===========
+
+Bug fixes:
+
+ - read_multi() didn't handle a missing file format library correctly,
+   aborting on failing to call i_readgif_multi_wiol() or
+   i_readtiff_multi_wiol().
+
+ - fix spelling errors patched by Debian
+   http://svn.debian.org/viewsvn/pkg-perl/trunk/libimager-perl/debian/patches/spelling.patch?revision=54839&view=markup
+
+ - add an (unshipped) author test to spellcheck Imager's POD.
+
+ - update the TIFF file format documentation
+   https://rt.cpan.org/Ticket/Display.html?id=56510
+
+ - lib/Imager/IO.pod was written almost 4 years ago but never shipped.
+
+Imager 0.73 - 15 Mar 2010
+===========
+
+ - implement outline circles, both anti-aliased and not
+   https://rt.cpan.org/Ticket/Display.html?id=19755
+
+ - a combine => "none" fill to a 1 or 3 channel image would produce
+   the incorrect colour.
+
+Imager 0.72 - 09 Dec 2009
+===========
+
+Bump version for release, since 0.71_03 is stable with CPAN testers.
+
+Imager 0.71_03 - 5 Dec 2009
+==============
+
+ - further adjust the threads test so it only performs the tests on
+   perls where it's expected to work, and only if the threads module
+   can be loaded.
+
+Imager 0.71_02 - 1 Dec 2009
+==============
+
+ - adjust the way we load the threads module for the threads test so
+   it works with non-threaded perls
+
+Imager 0.71_01 - 30 Nov 2009
+===========
+
+Bug fixes:
+
+ - use scanline oriented operations to flip images instead of pixel
+   operations
+   https://rt.cpan.org/Ticket/Display.html?id=39278
+
+ - use double/sample operations to flip large sample images instead of
+   8-bit sample operations.
+   https://rt.cpan.org/Ticket/Display.html?id=39280
+
+ - fix POD nits
+   https://rt.cpan.org/Ticket/Display.html?id=51874
+
+ - prevent double-frees when someone creates Imager objects and then
+   creates a thread.  Note: this just handles some simple cases,
+   Imager doesn't support perl threads, and isn't likely to.
+   https://rt.cpan.org/Ticket/Display.html?id=52268
+
+Imager 0.71 - 16 Nov 2009
+===========
+
+ - add the opacity fill type - an adaptor that modifies the opacity of
+   another fill.
+
+Bug fixes:
+
+ - the conv filter now enforces that the sum of the coefficients is
+   non-zero.  Also, rather than skipping pixels off the edge off the
+   edge of the image, the closest edge pixel is used.  Previously
+   dividing by the zero sum of coefficients could cause invalid
+   results or runtime exceptions.
+   Thanks to David Cantrell's Alpha-NetBSD CPAN test box for revealing
+   this bug.
+
+Imager 0.70 - 21 Sep 2009
+===========
+
+Bug fixes:
+
+ - release image row and comments memory on all error returns in gif
+   reader
+
+ - handle zero length extensions, previously this would cause a null
+   pointer dereference
+   Thanks to Krzysztof Wojtaś for the test data and fix for this.
+
+ - an integer division meant that preview scaling to below 1 pixel
+   wide or high (which isn't too useful anyway) was calculating using
+   NaNs on most platforms, and causing an exception on others.
+   Thanks to David Cantrell for producing a backtrace of the crash on
+   his Alpha-NetBSD CPAN test box which made it possible to track this
+   down.
+
+Imager 0.69 - 08 Sep 2009
+===========
+
+Bug fixes:
+
+ - broken test fix - was attempting to call a function skip_all, when
+   that should be a parameter to plan().
+
+ - briefly document apidocs.perl, the tool used to build
+   Imager::APIRef and make some minor enhancements
+
+ - various minor documentation enhancements and fixes.
+
+Imager 0.68 - 07 Sep 2009
+===========
+
+ - Imager->new(file => $filename) and other similar incantations will
+   load the given file.
+   https://rt.cpan.org/Ticket/Display.html?id=48261
+
+Bug fixes:
+
+ - avoid using CHECK as a label in Imager::Test
+   http://nntp.x.perl.org/group/perl.cpan.testers/5220921
+
+ - re-work most image file test files that require a library into
+   separate library present/not present files to remove stupidly long
+   conditionals
+
+ - don't treat rubthrough() outside the bounds of the target image as
+   an error.
+   http://nntp.x.perl.org/group/perl.cpan.testers/5185716
+
+Imager 0.67_01 - 02 Sep 2009
+==============
+
+Bug fixes:
+
+ - correct documentation of default of raw image interleave read
+   parameter
+   https://rt.cpan.org/Ticket/Display.html?id=42074
+
+ - add raw_ prefix to raw read parameters, though the original names
+   still work.
+
+ - fail the read if an invalid raw_interleave parameter is supplied
+
+ - warn if no interleave or raw_interleave parameter is supplied,
+   since the documented default was wrong, and incompatible with the
+   write format
+
+ - for reading raw images, if raw_storechannels > raw_datachannels,
+   set the extra channels in the image to 0
+
+ - when probing for executables like freetype-config, search for .bat
+   and .cmd on MSWin32, as well as .exe.
+   https://rt.cpan.org/Ticket/Display.html?id=49275
+
+ - re-work the external libraries section of README:
+   - list Debian and Redhat package names for each library
+   - reformatting
+   - update URLs
+
+ - use the new EU::MM META_MERGE facility instead of generating
+   META.yml from scratch
+   https://rt.cpan.org/Ticket/Display.html?id=47888
+
+ - use Devel::CheckLib (bundled, modified) to check which release of
+   libtiff is installed and reject 3.9.0
+   http://bugzilla.maptools.org/show_bug.cgi?id=2088
+   http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=543079
+
+Imager 0.67 - 12 Dec 2008
+===========
+
+Bug fixes:
+
+ - fix a packaging error
+
+Imager 0.66 - 12 Dec 2008
+===========
+
+ - 24-bit color .ICO/.CUR files can now be read.
+
+Bug fixes:
+
+ - an optimization skipping 0 src alpha values could cause the
+   rubthrough() to read past the end of a buffer.
+   http://www.nntp.perl.org/group/perl.cpan.testers/2008/05/msg1509184.html
+
+ - corrected a reference leak where writing GIFs would leak memory.
+   This could also happen calling to_paletted().
+   Also documented the underlying long existing feature where the
+   colors parameter is filled with the generated color table and added
+   tests for it.
+   http://rt.cpan.org/Ticket/Display.html?id=41028
+
+ - write out the image size in bytes field of a BMP correctly.
+   http://rt.cpan.org/Ticket/Display.html?id=41406
+
+ - add limited tests for Imager::ExtUtils
+
+ - make Imager::ExtUtils->includes use an absolute path, since
+   a relative path could cause failures using Inline::C.
+   http://rt.cpan.org/Ticket/Display.html?id=37353
+
+ - re-arrange the POD for Imager::Font::BBox:
+   - mark total_width(), pos_width(), end_offset() obsolete, since
+     they're mostly for backwards compatibility
+   - group width methods and height methods
+   https://rt.cpan.org/Ticket/Display.html?id=39999
+
+Imager 0.65 - 20 May 2008
+===========
+
+Bug fixes:
+
+ - In some cases when an error occurs reading those parts of a JPEG
+   file after the image the scan-line buffer could be freed a second
+   time.  In cases where the the error occured while reading the image
+   data it's possible that the buffer could have leaked.
+   Thanks to Gabriel Vasseur for reporting this and help in tracking
+   it down.
+
+ - the gif_screen_height tag was overriding the screen width and being
+   ignored for the screen height when present.
+   https://rt.cpan.org/Public/Bug/Display.html?id=35568
+
+Imager 0.64 - 23 April 2008
+===========
+
+This is a bug fix release.  This includes a fix for a possible
+security issue.
+
+Bug fixes:
+
+ - Possible security issue: The floating point sample path for image
+   based fills had a buffer overflow.  This would overwrite the end of
+   a malloc()ed buffer with double precision floats.
+   http://rt.cpan.org/Ticket/Display.html?id=35324
+   CVE-2008-1928
+
+ - check that the result of fileno($fh) is defined rather than simply
+   true when read() or write() is supplied with an fh parameter.
+   http://rt.cpan.org/Ticket/Display.html?id=35139
+
+ - i_scale_axis() wasn't checking the result of i_img_new_ch()
+   resulting in a SIGSEGV when attempting to scale an image to a size
+   too large to fit in memory.  This is a NULL pointer access issue,
+   not a buffer overflow.
+   Added a check for the failure.
+   scale_calculate() (and hence scale()) will now fail if any of the
+   scale size parameters are a reference.
+   http://rt.cpan.org/Ticket/Display.html?id=35172
+
+ - Regression: filling a greyscale image with a hatch used the wrong
+   color channels from the supplied fg/bg colors.
+   https://rt.cpan.org/Ticket/Display.html?id=35278
+
+ - fixed a related problem for image fills.
+
+Imager 0.63 - 7 April 2008
+===========
+
+This release primarily contains changes to improve ease of use -
+rather than you having to convert images to the appropriate number of
+channels, Imager handles it internally.  How to handle drawing colors
+and the default combine mode is a thornier problem left for some other
+release.
+
+ - the font libraries are now only initialized when needed.
+   http://rt.cpan.org/Ticket/Display.html?id=28825
+
+ - moved the imtoc.perl code into Imager::Preprocess
+
+ - paste() and rubthrough() now adapt the source image data to the
+   destination, so you can now safely paste/rubthrough from greyscale
+   images to color images or back, or from alpha channel images to
+   noalpha channels or back.
+   https://rt.cpan.org/Ticket/Display.html?id=30908
+
+ - rubthrough() now falls back to pasting when the source doesn't have
+   an alpha channel.  This effectively treats the source as having a
+   max alpha channel, the right thing to do.
+   http://rt.cpan.org/Ticket/Display.html?id=29944
+
+ - re-worked most of the area filling code to use a common set of
+   functions when filling.
+   Corrected normal combine mode.
+   Rewrote most of the combine modes to match the way the SVG draft
+   defines them with respect to a translucent source and destination.
+   Added tests for translucent source and destination.
+   Added tests to check 8-bit/sample and double/sample combines work
+   similarly.
+   https://rt.cpan.org/Ticket/Display.html?id=29879
+
+ - writing a 2 or 4 channel image to a JPEG file will now write that
+   image as if composited against a background, black by default,
+   overridable with the i_background tag/parameter.
+   https://rt.cpan.org/Ticket/Display.html?id=29876
+
+ - writing a 2 or 4 channel image to a PGM/PPM file will now write
+   that image as if composited against a background, black by default,
+   overridable with the i_background tag/parameter.
+   http://rt.cpan.org/Ticket/Display.html?id=30074
+
+ - writing a 2 or 4 channel image to a BMP file will now write that
+   image as if composited against a background, black by default,
+   overridable with the i_background tag/parameter.
+   http://rt.cpan.org/Ticket/Display.html?id=30075
+
+Bug fixes:
+
+ - Imager::Matrix2d->translate() now only requires one of the x or y
+   parameters.
+   http://rt.cpan.org/Ticket/Display.html?id=29937
+
+ - mixing qtype scaling now sets all channels of a pixel to zero if
+   the pixel has zero coverage (zero alpha).  This should produce more
+   compressible output files.
+   http://rt.cpan.org/Ticket/Display.html?id=32324
+
+ - removed the pointless #! line from lib/Imager/Font/Wrap.pm
+   Noticed when I saw:
+   https://bugzilla.redhat.com/show_bug.cgi?id=166254
+   I'm not changing the #! lines of the sample code, since it's sample
+   code, not intended for installation.
+   http://rt.cpan.org/Ticket/Display.html?id=33408
+
+ - some TGA images weren't being detected correctly as TGA images
+   https://rt.cpan.org/Ticket/Display.html?id=32925
+
+ - handling of the left-over bit for 16-bit/pixel TGA images has been
+   changed to match the behaviour of the GIMP.  Previously the bit
+   being set was treated as an opaque pixel, but one user reported a
+   problem with loading such an image.  I haven't been able to find any
+   tools beyond the GIMP that handle alpha-channel 16-bit TGAs, so
+   I'll match it's behaviour.  See issue 114913 in the GIMP's
+   bugzilla.
+   http://rt.cpan.org/Ticket/Display.html?id=32926
+
+Imager 0.62 - 10 December 2007
+===========
+
+ - Makefile.PL now expands ~/path supplied to --incpath or --libpath
+   to /path under your home directory.
+   http://rt.cpan.org/Ticket/Display.html?id=29484
+
+ - the old dynaload code used Mach API functions to load dynamic
+   libraries on Mac OS X.  These APIs have been deprecated in OS X
+   10.5 and were causing some build problems.
+   So henceforth Imager uses the dlopen() family of functions, and you 
+   will need version 10.3 or later of OS X.
+
+ - added the det() function to the transform2() engine.
+   added the sample quad_to_square.pl
+   Courtesy Richard Fairhurst.
+   http://rt.cpan.org/Ticket/Display.html?id=31244
+
+Bug fixes:
+
+ - samples/gifscale.pl sourced the base value for gif_top from
+   gif_left.
+   Thanks to Eleneldil G. Arilou for pointing this out.
+
+ - t/t82inline.t no longer loads B at runtime, to work around a bug
+   in some 5.005_0[45] installations.
+   http://rt.cpan.org/Ticket/Display.html?id=30508
+
+ - work around Module::Depends::Intrusive bug #21229
+   http://rt.cpan.org/Ticket/Display.html?id=30520
+
+ - the hardinvert filter no-longer inverts the alpha channel.
+   http://rt.cpan.org/Ticket/Display.html?id=30002
+
+ - the hardinvert filter now supports large samples
+
+Imager 0.61_02 - 28 November 2007
+==============
+
+ - major TIFF support re-work
+   http://rt.cpan.org/Ticket/Display.html?id=20329
+
+ - added a C level image interface for accessing samples from 1-32
+   bits, exposed this at the perl level in getsamples()
+
+ - the conv filter now works at floating point precision for high bit
+   images
+
+ - added is_bilevel method to test whether an image should be written as
+   a bilevel image if the image format supports it.
+
+ - added -log-stderr as an Imager import list option
+
+ - added some important types to Imager::APIRef
+
+ - added test_image_double() to Imager::Test
+
+Bug fixes:
+
+ - Imager::Fountain couldn't read GIMP gradient files with 10 or more
+   segments
+
+ - the scale() method with qtype mixing now handles images with an
+   alpha channel correctly.
+
+ - fixed a broken link from the "animated GIF" entry in the concept index.
+   Thanks to Slaven Rezic.
+   http://rt.cpan.org/Ticket/Display.html?id=30889
+
+ - on some perl's the infix expression parser test would fail due to
+   actions in the grammar returning false.  Made sure all actions return
+   a true value.
+   Thanks to Richard Fairhurst for spending a lot of time in tracking
+   down this problem.
+   http://rt.cpan.org/Public/Bug/Display.html?id=29562
+
+Imager 0.61 - 5 November 2007
+===========
+
+ - added samples/gifscale.pl, which adjusts the screen size/position tags
+   when scaling an animated gif
+   http://rt.cpan.org/Ticket/Display.html?id=27591
+
+Bug fixes:
+
+ - correct handling of sz in matrix_transform() - this should allow
+   perspective type transformations to work now.
+   http://rt.cpan.org/Ticket/Display.html?id=29936
+
+ - prevent a cast to integer warning on x64 builds in datatypes.c
+   also fixed some other type warnings
+   https://rt.cpan.org/Ticket/Display.html?id=30204
+
+ - some sub-directory tests depended on files produced by the parent
+   directory tests
+   http://rt.cpan.org/Ticket/Display.html?id=30203
+
+ - Imager::Font::Wrap doesn't correctly set savepos
+   thanks to Nikita Dedik and Eleneldil G. Arilou for reporting this.
+   http://rt.cpan.org/Ticket/Display.html?id=29771
+
+ - test 171 in t/t01introvert.t was failing on perls configured to
+   use long double.
+   http://rt.cpan.org/Ticket/Display.html?id=29413
+
+ - the code for the transform2() uminus operator was missing a break.
+   Added tests for better code coverage of the ops.
+   http://rt.cpan.org/Ticket/Display.html?id=29296
+
+ - the SGI RLE compression code could overflow its compression buffer
+   http://rt.cpan.org/Ticket/Display.html?id=30334
+
+ - the 32-bit output function used by the SGI code only handled values
+   under 0x10000.  This was most noticable when writing large RLE images.
+   http://rt.cpan.org/Ticket/Display.html?id=30335
+
+ - validate chan_count for chans == NULL for each of the i_gsamp()
+   implementations.
+   http://rt.cpan.org/Ticket/Display.html?id=28985
+
+ - attempt to work around the test failure at 
+   http://www.nntp.perl.org/group/perl.cpan.testers/2007/09/msg650810.html
+   http://rt.cpan.org/Ticket/Display.html?id=29562
+
+ - improve the error messages produced when attempting to read or write
+   an unknown image file format.
+   http://rt.cpan.org/Ticket/Display.html?id=30103
+
+ - improve the transform2() documentation
+   http://rt.cpan.org/Ticket/Display.html?id=29267
+
+ - correctly generate the author key in META.yml
+   http://rt.cpan.org/Ticket/Display.html?id=30377
+
+ - correctly blend a rotated (or matrix_transformed()) image when
+   performing interpolation in the presence of an alpha channel.
+   Also corrected the centring of the rotated image on the output
+   image.
+
+Imager 0.60 - 30 August 2007
+===========
+
+ - Finished/rewrote Arnar's old SGI RGB file format support, so Imager
+   now has full SGI RGB image format, including RLE and 16-bit/sample
+   images.
+   https://rt.cpan.org/Ticket/Display.html?id=8666
+
+ - logging functions are now available in the API
+
+ - applied Gabriel Vasseur's patch
+   added documentation, further tests, and support for greyscale images
+   Obviously problems are my fault :)
+   https://rt.cpan.org/Ticket/Display.html?id=28142
+
+ - the mask for ICO/CUR images is now applied as an alpha channel to
+   the returned image.  For the old behaviour, supply ico_masked => 0
+   to read() or read_multi().  This should be less confusing when
+   using Imager as a general image processor.
+   https://rt.cpan.org/Ticket/Display.html?id=29001
+
+Bug fixes:
+
+ - in some cases it's possible for giflib/libungif to return color 
+   indexes outside the range of colors defined by the image's palette.
+   We now expand the palette to match the indexes used.
+   Thanks to Gabriel Vasseur for reporting this.
+
+ - fixed various memory leaks that could occur when failing to read png,
+   jpeg, bmp or tga files.
+
+ - to avoid confusion, channels not present in the image are returned as
+   zero by getscanline().  This has no effect on the C level i_glin()
+   and i_glinf() API functions which continue to not set the unused
+   channels.
+
+ - the convert() method now returns an image of the same sample size as
+   the source image.
+   https://rt.cpan.org/Ticket/Display.html?id=28492
+
+ - remove repeated text in Imager::Files
+   http://rt.cpan.org/Ticket/Display.html?id=27589
+
+ - be even more explicit that scale() and friends don't modify the source
+   image, but return a new image.
+   http://rt.cpan.org/Ticket/Display.html?id=28570
+
+ - improve the error message from errstr() when you try to load a font
+   for which the driver hasn't been built in Imager.
+   http://rt.cpan.org/Ticket/Display.html?id=27571
+
+ - transparency is now enabled by default when writing GIF images
+   http://rt.cpan.org/Ticket/Display.html?id=27615
+
+ - Imager would not load on Windows 98
+   http://rt.cpan.org/Ticket/Display.html?id=27653
+
+Imager 0.59 - 14 June 2007
+===========
+
+Bug fixes:
+
+ - fixes a regression introduced by the fixes for RT 11972
+   http://rt.cpan.org/Ticket/Display.html?id=27546
+
+ - cropping outside the image would return an Imager object with
+   no low-level image object, instead of returning false.
+   Fixed by: Philip Gwyn (Leolo)
+   http://rt.cpan.org/Ticket/Display.html?id=27509
+
+Imager 0.58 - 16 May 2007
+===========
+
+No significant changes from 0.57_01.
+
+Imager 0.57_01 - 11 May 2007
+==============
+
+ - added to_rgb16 to produce a 16-bit/sample version of an image
+
+ - improve freetype 1.x text output efficiency
+
+Bug fixes:
+
+ - search another place for rgb.txt, and check all the places 
+   Imager::Color checks when deciding whether to skip testing it
+   http://rt.cpan.org/Ticket/Display.html?id=26064
+
+ - use a convolution kernel size based on the stddev rather than a
+   fixed size when performing a gaussian blur
+   http://rt.cpan.org/Ticket/Display.html?id=25645
+
+ - document the difference() method's mindist parameter, and debug it.
+
+ - put the Imager release number in the Inline::C generated code to
+   regenerate Inline code when a new release of Imager is installed.
+   http://rt.cpan.org/Ticket/Display.html?id=26278
+
+ - fix rendering on alpha channel images for the FreeType 1.x driver.
+   http://rt.cpan.org/Ticket/Display.html?id=11972
+
+ - fix rendering on alpha channel images for the T1lib driver.
+   http://rt.cpan.org/Ticket/Display.html?id=11972
+
+ - reworked library probing, we can now set more than one probe
+   function for a library.  Disabled the default (non-freetype-config)
+   library probe and added an extra probe function that searches for
+   both ft2build.h and whatever it includes, and adds -I as needed.
+   Hopefully this will fix build problems like
+   http://www.nntp.perl.org/group/perl.cpan.testers/2007/05/msg472281.html
+   http://rt.cpan.org/Ticket/Display.html?id=26086
+
+Imager 0.57 - 30 Apr 2007
+===========
+
+This is a maintenence release fixing a security issue in Imager.
+
+ - CRITICAL: a specially crafted compressed BMP file can cause a buffer
+   overflow in malloced memory.  There will be further discussion of
+   this issue in the ticket below.
+   http://rt.cpan.org/Ticket/Display.html?id=26811
+   CVE-2007-2459  CVE-2007-2413
+   The descriptions at cve.mitre.org varied in quality, please see the
+   ticket at rt.cpan.org for a more accurate description of the issue.
+
+Imager 0.56 - 1 Apr 2007
+===========
+
+ - added support for reading 16-bit/sample PGM/PPM images
+
+ - added support for writing 16-bit/sample PGM/PPM images
+
+ - improved performance of reading PBM/PGM/PPM images
+
+ - added support for writing PBM images if the image is paletted and
+   contains only black and white
+
+ - added a new make_colors value - "mono"
+
+ - switched from the svn log Changes to a manual Changes to reduce
+   noise
+
+ - new sample code - samples/flasher.pl
+
+Bug fixes:
+
+ - CRITICAL: the "Imager" typemap entry (not used by Imager itself)
+   was returning an image object with an extra reference, this
+   resulted in a memory leak.
+   http://rt.cpan.org/Ticket/Display.html?id=24992
+
+ - fix rendering on alpha channel images for the FreeType 2.x driver
+   http://rt.cpan.org/Ticket/Display.html?id=11972
+
+ - reading bmp files now consitently handles short reads.  You can now
+   supply a parameter to treat a short read as successful and set
+   i_incomplete
+   http://rt.cpan.org/Ticket/Display.html?id=8426
+
+ - previously, reading ASCII PBM files required spaces between samples,
+   even though the format doesn't require that
+
+ - improved documentation of the unsharpmask filter (I hope)
+   http://rt.cpan.org/Ticket/Display.html?id=25531
+
+ - force flushing of the output from i_tt_dump_names() and test output
+   in t/t35ttfont.t to prevent output from being mixed up.
+   https://rt.cpan.org/Ticket/Display.html?id=24859
+
+ - rewrite a conditional expression as an if() to hopefully work around
+   a bug in the pre-4.0 GCC Apple shipped with OS X 10.4.
+   https://rt.cpan.org/Ticket/Display.html?id=25561
+
+ - avoid Data::Dumper in regops.perl to support older releases of perl
+   https://rt.cpan.org/Ticket/Display.html?id=24391
+
+Imager 0.55 - 16 Dec 2006
+===========
+
+This is primarily a bug fix release.
+
+Note: Test::More is now a pre-requisite for Imager and is no longer bundled.
+
+There is one new feature:
+
+ - the Win32 font driver now supports UTF8 (RT 22166)
+   http://www.cpanforum.com/threads/3276
+   http://rt.cpan.org/Ticket/Display.html?id=22166
+
+Several bugs were fixed:
+
+ - the string() method would not output the string "0"
+   http://rt.cpan.org/Public/Bug/Display.html?id=21770
+
+ - fills.c was failing to compile on Solaris 10 (compiler unknown)
+   http://rt.cpan.org/Public/Bug/Display.html?id=21944
+
+ - the gif_disposal and gif_user_input tags weren't being read from
+   the file correctly
+   http://rt.cpan.org/Public/Bug/Display.html?id=22192
+
+ - gif.c was failing to build under MSVC
+   http://rt.cpan.org/Ticket/Display.html?id=23922
+
+ - in some cases strings passed to the string() method were treated as
+   terminated by NUL (chr 0)
+   http://rt.cpan.org/Public/Bug/Display.html?id=21770
+
+ - on "MSWin32" perl builds we now link to -lzlib instead of -lz since
+   that's the default build name for zlib on Win32.
+   http://rt.cpan.org/Ticket/Display.html?id=23064
+
+ - search $Config{incpath} for headers too, which we should have been
+   doing all along.
+
+Win32 font driver fixes:
+
+ - the global descent value from bounding box was the wrong sign
+   http://www.cpanforum.com/threads/3276
+
+ - if the first or last glyph overflowed the left or right side of the
+   advance width they would be clipped
+
+
+Imager 0.54 - 14 Sep 2006
+===========
+
+This is primarily a feature release:
+
+ - a new qtype value 'mixing' has been added to the scale()
+   method. This is faster than 'normal', slower than 'preview'. This
+   is based on the method used by pnmscale, and seems to produce less
+   blurry results than normal.
+   http://rt.cpan.org/Public/Bug/Display.html?id=20677
+
+ - the rubthrough() method can now render onto images with an alpha
+   channel.
+   http://rt.cpan.org/Ticket/Display.html?id=20678
+
+ - the read_multi() method now falls back to calling doing a single
+   image read via the read() method and write_multi() will now fall
+   back to calling write() if a single image is supplied. This means
+   you can simply call the read_multi() or write_multi() functions
+   without having to check if the type is formatted by that method.
+   http://rt.cpan.org/Ticket/Display.html?id=19457
+   http://rt.cpan.org/Ticket/Display.html?id=19458
+
+ - the GIF loop extension can now be written. If you don't have
+   libungif/giflib 4.1.4 (or some distribution's bugfixed equivalent) you
+   should upgrade.
+   http://rt.cpan.org/Ticket/Display.html?id=21185
+
+ - getscanline() and setscanline() can now read/write palette index
+   based data from/to the image for paletted images, by setting type to
+   'index'.
+   http://rt.cpan.org/Ticket/Display.html?id=20338
+
+ - we no longer hassle you to disable GIF support
+   http://rt.cpan.org/Ticket/Display.html?id=20687
+
+ - minor documentation fixes
+
+
+Imager 0.53 - 26 Jul 2006
+===========
+
+This is a bugfix release.
+
+Some test code was left in a code path not covered by the test
+suite. A test was added to cover this code path and the test code was
+removed.
+http://rt.cpan.org/Public/Bug/Display.html?id=20705
+
+
+Imager 0.52 - 25 Jul 2006
+===========
+
+This is primarily a feature release, but contains a fair few bug
+fixes, new features:
+
+ - ability to read and write MS Windows ICO and CUR files
+
+ - you can now add file format plugins to support new file formats
+
+ - add POD coverage tests
+
+ - setcolors() and addcolors() now accept color names and so on
+   instead of requiring Imager::Color objects.
+   http://rt.cpan.org/Ticket/Display.html?id=20056
+
+ - flood_fill() can now fill to a specified border color instead of
+   just to the area the same color as the seed.
+   http://rt.cpan.org/Ticket/Display.html?id=19618
+
+
+Bug fixes:
+
+ - bounding_box for the T1 driver wasn't converting UTF8 to ascii when
+   calculating the advance width.
+   http://rt.cpan.org/Public/Bug/Display.html?id=20554
+
+ - bounding_box for the T1 driver wasn't including leading and
+   trailing spaces in the bounding box as the other drivers did, it also
+   produced strange results for empty strings or strings containing only
+   spaces
+
+ - when reading CMYK jpeg images they were being transferred to the
+   image object as is, producing a four channel image. It only looked ok
+   due to an old still unfixed Photoshop bug. We now convert from the
+   inverted CMYK that photoshop (and Corel for example) produce into RGB.
+   http://rt.cpan.org/Ticket/Display.html?id=20416
+
+ - reading a CYMK TIFF would result in a 4 channel image, reading any
+   image with more than 4 channels (eg. RGB with 2 alpha channels) would
+   result in an error.
+   http://rt.cpan.org/Ticket/Display.html?id=20415
+
+ - added /usr/local/include to the default include search path, since
+   we were already searching /usr/local/lib for libraries.
+
+And various minor fixes and documentation updates.
+
+
+Imager 0.51 - 23 Apr 2006
+===========
+
+ - fix a validation bug when processing JPEG EXIF data that can cause
+   a crash
+   http://rt.cpan.org/Public/Bug/Display.html?id=18496
+
+ - fix mis-processing of the src_maxx and src_maxy parameters of the
+   paste() method
+   http://rt.cpan.org/Public/Bug/Display.html?id=18712
+
+ - fix a problem in Imager's "smart" handling of the color parameter
+   to various methods.
+   http://rt.cpan.org/Public/Bug/Display.html?id=18561
+
+
+Imager 0.50 - 29 Mar 2006
+===========
+
+ - CRITICAL: fixes a segmentation fault from attempting to write a 2
+   or 4 channel image to jpeg or a 2 channel image to tga where the
+   output is an in-memeory buffer.
+   http://rt.cpan.org/Public/Bug/Display.html?id=18397
+
+ - fixes an incorrect pointer parameter in the PNG code
+   http://rt.cpan.org/Public/Bug/Display.html?id=18051
+
+ - skip Inline::C tests when building in a directory with spaces
+   http://rt.cpan.org/Public/Bug/Display.html?id=18049

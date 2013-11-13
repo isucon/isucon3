@@ -1,0 +1,463 @@
+#include "imager.h"
+#include "imageri.h"
+
+/*
+=item i_copyto(C<dest>, C<src>, C<x1>, C<y1>, C<x2>, C<y2>, C<tx>, C<ty>)
+
+=category Image
+
+Copies image data from the area (C<x1>,C<y1>)-[C<x2>,C<y2>] in the
+source image to a rectangle the same size with it's top-left corner at
+(C<tx>,C<ty>) in the destination image.
+
+If C<x1> > C<x2> or C<y1> > C<y2> then the corresponding co-ordinates
+are swapped.
+
+=cut
+*/
+
+void
+i_copyto(i_img *im, i_img *src, i_img_dim x1, i_img_dim y1, i_img_dim x2, i_img_dim y2, i_img_dim tx, i_img_dim ty) {
+  i_img_dim y, t, tty;
+  
+  if (x2<x1) { t=x1; x1=x2; x2=t; }
+  if (y2<y1) { t=y1; y1=y2; y2=t; }
+  if (tx < 0) {
+    /* adjust everything equally */
+    x1 += -tx;
+    x2 += -tx;
+    tx = 0;
+  }
+  if (ty < 0) {
+    y1 += -ty;
+    y2 += -ty;
+    ty = 0;
+  }
+  if (x1 >= src->xsize || y1 >= src->ysize)
+    return; /* nothing to do */
+  if (x2 > src->xsize)
+    x2 = src->xsize;
+  if (y2 > src->ysize)
+    y2 = src->ysize;
+  if (x1 == x2 || y1 == y2)
+    return; /* nothing to do */
+
+  mm_log((1,"i_copyto(im* %p, src %p, p1(" i_DFp "), p2(" i_DFp "), t("
+	  i_DFp "))\n",
+	  im, src, i_DFcp(x1, y1), i_DFcp(x2, y2), i_DFcp(tx, ty)));
+
+#code im->bits == i_8_bits
+  IM_COLOR *row = mymalloc(sizeof(IM_COLOR) * (x2-x1));
+  tty = ty;
+  for(y=y1; y<y2; y++) {
+    IM_GLIN(src, x1, x2, y, row);
+    if (src->channels != im->channels)
+      IM_ADAPT_COLORS(im->channels, src->channels, row, x2-x1);
+    IM_PLIN(im, tx, tx+x2-x1, tty, row);
+    tty++;
+  }
+  myfree(row);
+#/code
+}
+
+#code
+void
+#ifdef IM_EIGHT_BIT
+i_adapt_colors
+#else
+i_adapt_fcolors
+#endif
+(int out_channels, int in_channels, IM_COLOR *colors, 
+	       size_t count) {
+  if (out_channels == in_channels)
+    return;
+  if (count == 0)
+    return;
+
+  switch (out_channels) {
+  case 1:
+    {
+      switch (in_channels) {
+      case 2:
+	/* apply alpha against a black background */
+	while (count) {
+	  colors->channel[0] = colors->channel[0] * colors->channel[1] / IM_SAMPLE_MAX;
+	  ++colors;
+	  --count;
+	}
+	return;
+
+      case 3:
+	/* convert to grey */
+	while (count) {
+	  colors->channel[0] = IM_ROUND(color_to_grey(colors));
+	  ++colors;
+	  --count;
+	}
+	return;
+	    
+      case 4:
+	while (count) {
+	  colors->channel[0] = IM_ROUND(color_to_grey(colors) * colors->channel[3] / IM_SAMPLE_MAX);
+	  ++colors;
+	  --count;
+	}
+	return;
+
+      default:
+	i_fatal(3, "i_adapt_colors: in_channels of %d invalid\n", in_channels);
+	return; /* avoid warnings */
+      }
+    }
+
+  case 2:
+    {
+      switch (in_channels) {
+      case 1:
+	while (count) {
+	  colors->channel[1] = IM_SAMPLE_MAX;
+	  ++colors;
+	  --count;
+	}
+	return;
+
+      case 3:
+	while (count) {
+	  colors->channel[0] = IM_ROUND(color_to_grey(colors));
+	  colors->channel[1] = IM_SAMPLE_MAX;
+	  ++colors;
+	  --count;
+	}
+	return;
+
+      case 4:
+	while (count) {
+	  colors->channel[0] = IM_ROUND(color_to_grey(colors));
+	  colors->channel[1] = colors->channel[3];
+	  ++colors;
+	  --count;
+	}
+	return;
+
+      default:
+	i_fatal(3, "i_adapt_colors: in_channels of %d invalid\n", in_channels);
+	return; /* avoid warnings */
+      }
+    }
+
+  case 3:
+    {
+      switch (in_channels) {
+      case 1:
+	while (count) {
+	  colors->channel[1] = colors->channel[2] = colors->channel[0];
+	  ++colors;
+	  --count;
+	}
+	return;
+
+      case 2:
+	while (count) {
+	  int alpha = colors->channel[1];
+	  colors->channel[0] = colors->channel[1] = colors->channel[2] =
+	    IM_ROUND(colors->channel[0] * alpha / IM_SAMPLE_MAX);
+	  ++colors;
+	  --count;
+	}
+	return;
+
+      case 4:
+	while (count) {
+	  int alpha = colors->channel[3];
+	  colors->channel[0] = 
+	    IM_ROUND(colors->channel[0] * alpha / IM_SAMPLE_MAX);
+	  colors->channel[1] = 
+	    IM_ROUND(colors->channel[1] * alpha / IM_SAMPLE_MAX);
+	  colors->channel[2] = 
+	    IM_ROUND(colors->channel[2] * alpha / IM_SAMPLE_MAX);
+	  ++colors;
+	  --count;
+	}
+	return;
+
+      default:
+	i_fatal(3, "i_adapt_colors: in_channels of %d invalid\n", in_channels);
+	return; /* avoid warnings */
+      }
+    }
+
+  case 4:
+    {
+      switch (in_channels) {
+      case 1:
+	while (count) {
+	  colors->channel[1] = colors->channel[2] = colors->channel[0];
+	  colors->channel[3] = IM_SAMPLE_MAX;
+	  ++colors;
+	  --count;
+	}
+	return;
+
+      case 2:
+	while (count) {
+	  colors->channel[3] = colors->channel[1];
+	  colors->channel[1] = colors->channel[2] = colors->channel[0];
+	  ++colors;
+	  --count;
+	}
+	return;
+
+      case 3:
+	while (count) {
+	  colors->channel[3] = IM_SAMPLE_MAX;
+	  ++colors;
+	  --count;
+	}
+	return;
+
+      default:
+	i_fatal(3, "i_adapt_colors: in_channels of %d invalid\n", in_channels);
+	return; /* avoid warnings */
+      }
+    }
+
+  default:
+    i_fatal(3, "i_adapt_colors: out_channels of %d invalid\n", out_channels);
+    return; /* avoid warnings */
+  }
+}
+
+void
+#ifdef IM_EIGHT_BIT
+i_adapt_colors_bg
+#else
+i_adapt_fcolors_bg
+#endif
+(int out_channels, int in_channels, IM_COLOR *colors, 
+	       size_t count, IM_COLOR const *bg) {
+  if (out_channels == in_channels)
+    return;
+  if (count == 0)
+    return;
+
+  switch (out_channels) {
+  case 2:
+  case 4:
+    IM_ADAPT_COLORS(out_channels, in_channels, colors, count);
+    return;
+
+  case 1:
+    switch (in_channels) {
+    case 3:
+      IM_ADAPT_COLORS(out_channels, in_channels, colors, count);
+      return;
+
+    case 2:
+      {
+	/* apply alpha against our given background */
+	IM_WORK_T grey_bg = IM_ROUND(color_to_grey(bg));
+	while (count) {
+	  colors->channel[0] = 
+	    (colors->channel[0] * colors->channel[1] +
+	     grey_bg * (IM_SAMPLE_MAX - colors->channel[1])) / IM_SAMPLE_MAX;
+	  ++colors;
+	  --count;
+	}
+      }
+      break;
+
+    case 4:
+      {
+	IM_WORK_T grey_bg = IM_ROUND(color_to_grey(bg));
+	while (count) {
+	  IM_WORK_T src_grey = IM_ROUND(color_to_grey(colors));
+	  colors->channel[0] =
+	    (src_grey * colors->channel[3]
+	     + grey_bg * (IM_SAMPLE_MAX - colors->channel[3])) / IM_SAMPLE_MAX;
+	  ++colors;
+	  --count;
+	}
+      }
+      break;
+    }
+    break;
+      
+  case 3:
+    switch (in_channels) {
+    case 1:
+      IM_ADAPT_COLORS(out_channels, in_channels, colors, count);
+      return;
+
+    case 2:
+      {
+	while (count) {
+	  int ch;
+	  IM_WORK_T src_grey = colors->channel[0];
+	  IM_WORK_T src_alpha = colors->channel[1];
+	  for (ch = 0; ch < 3; ++ch) {
+	    colors->channel[ch] =
+	      (src_grey * src_alpha
+	       + bg->channel[ch] * (IM_SAMPLE_MAX - src_alpha)) 
+	      / IM_SAMPLE_MAX;
+	  }
+	  ++colors;
+	  --count;
+	}
+      }
+      break;
+
+    case 4:
+      {
+	while (count) {
+	  int ch;
+	  IM_WORK_T src_alpha = colors->channel[3];
+	  for (ch = 0; ch < 3; ++ch) {
+	    colors->channel[ch] =
+	      (colors->channel[ch] * src_alpha
+	       + bg->channel[ch] * (IM_SAMPLE_MAX - src_alpha)) 
+	      / IM_SAMPLE_MAX;
+	  }
+	  ++colors;
+	  --count;
+	}
+      }
+      break;
+    }
+    break;
+  }
+}
+
+/*
+=item i_gsamp_bg(im, l, r, y, samples, out_channels, background)
+
+=category Drawing
+
+Like C<i_gsampf()> but applies the source image color over a supplied
+background color.
+
+This is intended for output to image formats that don't support alpha
+channels.
+
+=cut
+
+=item i_gsampf_bg(im, l, r, y, samples, out_channels, background)
+
+=category Drawing
+
+Like C<i_gsampf()> but applies the source image color over a supplied
+background color.
+
+This is intended for output to image formats that don't support alpha
+channels.
+
+=cut
+*/
+int
+#ifdef IM_EIGHT_BIT
+i_gsamp_bg
+#else
+i_gsampf_bg
+#endif
+(i_img *im, i_img_dim l, i_img_dim r, i_img_dim y, IM_SAMPLE_T *samples, 
+ int out_channels, IM_COLOR const *bg) {
+  if (out_channels == im->channels)
+    return IM_GSAMP(im, l, r, y, samples, NULL, im->channels);
+  
+  switch (out_channels) {
+  case 1:
+    switch (im->channels) {
+    case 2:
+      {
+	i_img_dim x;
+	IM_SAMPLE_T *inp = samples, *outp = samples;
+	IM_WORK_T grey_bg = IM_ROUND(color_to_grey(bg));
+	i_img_dim count;
+
+	count = IM_GSAMP(im, l, r, y, samples, NULL, im->channels);
+	if (!count)
+	  return 0;
+	
+	for (x = l; x < r; ++x) {
+	  *outp++ = ( inp[0] * inp[1] +
+		      grey_bg * (IM_SAMPLE_MAX - inp[1])) / IM_SAMPLE_MAX;
+	  inp += 2;
+	}
+
+	return count;
+      }
+      break;
+
+    default:
+      i_fatal(0, "i_gsamp_bg() can only remove alpha channels");
+      break;
+    }
+    break;
+  case 3:
+    switch (im->channels) {
+    case 1:
+      {
+	int channels[3] = { 0, 0, 0 };
+	return IM_GSAMP(im, l, r, y, samples, channels, out_channels);
+      }
+    case 2:
+      {
+	i_img_dim x;
+	int ch;
+	IM_SAMPLE_T *inp = samples, *outp = samples;
+	i_img_dim count;
+	int channels[4] = { 0, 0, 0, 1 };
+
+	count = IM_GSAMP(im, l, r, y, samples, channels, im->channels);
+	if (!count)
+	  return 0;
+	
+	for (x = l; x < r; ++x) {
+	  IM_WORK_T alpha = inp[3];
+	  for (ch = 0; ch < 3; ++ch) {
+	    *outp++ = ( *inp++ * alpha +
+			bg->channel[ch] * (IM_SAMPLE_MAX - alpha)) / IM_SAMPLE_MAX;
+	  }
+	  ++inp;
+	}
+
+	return count;
+      }
+
+    case 4:
+      {
+	i_img_dim x;
+	int ch;
+	IM_SAMPLE_T *inp = samples, *outp = samples;
+	i_img_dim count;
+
+	count = IM_GSAMP(im, l, r, y, samples, NULL, im->channels);
+	if (!count)
+	  return 0;
+	
+	for (x = l; x < r; ++x) {
+	  IM_WORK_T alpha = inp[3];
+	  for (ch = 0; ch < 3; ++ch) {
+	    *outp++ = ( *inp++ * alpha +
+			bg->channel[ch] * (IM_SAMPLE_MAX - alpha)) / IM_SAMPLE_MAX;
+	  }
+	  ++inp;
+	}
+
+	return count;
+      }
+      break;
+    default:
+      i_fatal(0, "i_gsamp_bg() can only remove alpha channels");
+      break;
+    }
+    break;
+
+  default:
+    i_fatal(0, "i_gsamp_bg() can only remove alpha channels");
+  }
+
+  return 0;
+}
+
+#/code
+

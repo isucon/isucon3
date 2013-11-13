@@ -1,0 +1,1313 @@
+/*
+Render utilities
+*/
+#include "imager.h"
+
+#define RENDER_MAGIC 0x765AE
+
+typedef void (*render_color_f)(i_render *, i_img_dim, i_img_dim, i_img_dim, unsigned char const *src, i_color const *color);
+
+#define i_has_alpha(channels) ((channels) == 2 || (channels) == 4)
+
+#define i_color_channels(channels) (i_has_alpha(channels) ? (channels)-1 : (channels))
+
+#code
+
+static void IM_SUFFIX(render_color_alpha)(i_render *r, i_img_dim x, i_img_dim y, i_img_dim width, unsigned char const *src, i_color const *color);
+static void IM_SUFFIX(render_color_13)(i_render *r, i_img_dim x, i_img_dim y, i_img_dim width, unsigned char const *src, i_color const *color);
+
+static render_color_f IM_SUFFIX(render_color_tab)[] =
+  {
+    NULL,
+    IM_SUFFIX(render_color_13),
+    IM_SUFFIX(render_color_alpha),
+    IM_SUFFIX(render_color_13),
+    IM_SUFFIX(render_color_alpha),
+  };
+
+static void IM_SUFFIX(combine_line_noalpha)(IM_COLOR *out, IM_COLOR const *in, int channels, i_img_dim count);
+static void IM_SUFFIX(combine_line_alpha)(IM_COLOR *out, IM_COLOR const *in, int channels, i_img_dim count);
+/* the copy variant copies the source alpha to the the output alpha channel */
+static void IM_SUFFIX(combine_line_alpha_na)(IM_COLOR *out, IM_COLOR const *in, int channels, i_img_dim count);
+
+static void IM_SUFFIX(combine_line)(IM_COLOR *out, IM_COLOR const *in, int channels, i_img_dim count);
+static void IM_SUFFIX(combine_line_na)(IM_COLOR *out, IM_COLOR const *in, int channels, i_img_dim count);
+
+#/code
+
+/* 
+=item i_render_new(im, width)
+=category Blit tools
+
+Allocate a new C<i_render> object and initialize it.
+
+=cut
+*/
+
+i_render *
+i_render_new(i_img *im, i_img_dim width) {
+  i_render *r = mymalloc(sizeof(i_render));
+
+  i_render_init(r, im, width);
+
+  return r;
+}
+
+/*
+=item i_render_delete(r)
+=category Blit tools
+
+Release an C<i_render> object.
+
+=cut
+*/
+
+void
+i_render_delete(i_render *r) {
+  i_render_done(r);
+  myfree(r);
+}
+
+void
+i_render_init(i_render *r, i_img *im, i_img_dim width) {
+  r->magic = RENDER_MAGIC;
+  r->im = im;
+  r->line_width = width;
+  r->line_8 = NULL;
+  r->line_double = NULL;
+  r->fill_width = width;
+  r->fill_line_8 = NULL;
+  r->fill_line_double = NULL;
+}
+
+void
+i_render_done(i_render *r) {
+  if (r->line_8)
+    myfree(r->line_8);
+  if (r->line_double)
+    myfree(r->line_double);
+  if (r->fill_line_8)
+    myfree(r->fill_line_8);
+  if (r->fill_line_double)
+    myfree(r->fill_line_double);
+  r->magic = 0;
+}
+
+static void
+alloc_line(i_render *r, i_img_dim width, i_img_dim eight_bit) {
+  if (width > r->line_width) {
+    i_img_dim new_width = r->line_width * 2;
+    if (new_width < width)
+      new_width = width;
+
+    if (eight_bit) {
+      if (r->line_8)
+	r->line_8 = myrealloc(r->line_8, sizeof(i_color) * new_width);
+      else
+	r->line_8 = mymalloc(sizeof(i_color) * new_width);
+      if (r->line_double) {
+	myfree(r->line_double);
+	r->line_double = NULL;
+      }
+    }
+    else {
+      if (r->line_double)
+	r->line_double = myrealloc(r->line_double, sizeof(i_fcolor) * new_width);
+      else
+	r->line_double = mymalloc(sizeof(i_fcolor) * new_width);
+      if (r->line_8) {
+	myfree(r->line_8);
+	r->line_double = NULL;
+      }
+    }
+
+    r->line_width = new_width;
+  }
+  else {
+    if (eight_bit) {
+      if (!r->line_8)
+	r->line_8 = mymalloc(sizeof(i_color) * r->line_width);
+      if (r->line_double) {
+	myfree(r->line_double);
+	r->line_double = NULL;
+      }
+    }
+    else {
+      if (!r->line_double)
+	r->line_double = mymalloc(sizeof(i_fcolor) * r->line_width);
+      if (r->line_8) {
+	myfree(r->line_8);
+	r->line_8 = NULL;
+      }
+    }
+  }
+}
+
+static void
+alloc_fill_line(i_render *r, i_img_dim width, int eight_bit) {
+  if (width > r->fill_width) {
+    i_img_dim new_width = r->fill_width * 2;
+    if (new_width < width)
+      new_width = width;
+
+    if (eight_bit) {
+      if (r->line_8)
+	r->fill_line_8 = myrealloc(r->fill_line_8, sizeof(i_color) * new_width);
+      else
+	r->fill_line_8 = mymalloc(sizeof(i_color) * new_width);
+      if (r->fill_line_double) {
+	myfree(r->fill_line_double);
+	r->fill_line_double = NULL;
+      }
+    }
+    else {
+      if (r->fill_line_double)
+	r->fill_line_double = myrealloc(r->fill_line_double, sizeof(i_fcolor) * new_width);
+      else
+	r->fill_line_double = mymalloc(sizeof(i_fcolor) * new_width);
+      if (r->fill_line_8) {
+	myfree(r->fill_line_8);
+	r->fill_line_double = NULL;
+      }
+    }
+
+    r->fill_width = new_width;
+  }
+  else {
+    if (eight_bit) {
+      if (!r->fill_line_8)
+	r->fill_line_8 = mymalloc(sizeof(i_color) * r->fill_width);
+      if (r->fill_line_double) {
+	myfree(r->fill_line_double);
+	r->fill_line_double = NULL;
+      }
+    }
+    else {
+      if (!r->fill_line_double)
+	r->fill_line_double = mymalloc(sizeof(i_fcolor) * r->fill_width);
+      if (r->fill_line_8) {
+	myfree(r->fill_line_8);
+	r->fill_line_8 = NULL;
+      }
+    }
+  }
+}
+
+/*
+=item i_render_color(r, x, y, width, source, color)
+=category Blit tools
+
+Render the given color with the coverage specified by C<source[0]> to
+C<source[width-1]>.
+
+Renders in normal combine mode.
+
+=cut
+*/
+
+void
+i_render_color(i_render *r, i_img_dim x, i_img_dim y, i_img_dim width,
+	       unsigned char const *src, i_color const *color) {
+  i_img *im = r->im;
+  if (y < 0 || y >= im->ysize)
+    return;
+  if (x < 0) {
+    width += x;
+    src -= x;
+    x = 0;
+  }
+  if (x + width > im->xsize) {
+    width = im->xsize - x;
+  }
+  if (x >= im->xsize || x + width <= 0 || width <= 0)
+    return;
+
+  /* avoid as much work as we can */
+  while (width > 0 && *src == 0) {
+    --width;
+    ++src;
+    ++x;
+  }
+  while (width > 0 && src[width-1] == 0) {
+    --width;
+  }
+  if (!width)
+    return;
+
+  alloc_line(r, width, r->im->bits <= 8);
+
+#code r->im->bits <= 8
+  /*if (r->IM_SUFFIX(line) == NULL)
+    r->IM_SUFFIX(line) = mymalloc(sizeof(IM_COLOR) * r->width);*/
+  (IM_SUFFIX(render_color_tab)[im->channels])(r, x, y, width, src, color);
+#/code
+}
+
+/*
+=item i_render_fill(r, x, y, width, source, fill)
+=category Blit tools
+
+Render the given fill with the coverage in C<source[0]> through
+C<source[width-1]>.
+
+=cut
+*/
+
+void
+i_render_fill(i_render *r, i_img_dim x, i_img_dim y, i_img_dim width,
+	      unsigned char const *src, i_fill_t *fill) {
+  i_img *im = r->im;
+  int fill_channels = im->channels;
+  
+  if (fill_channels == 1 || fill_channels == 3)
+    ++fill_channels;
+
+  if (y < 0 || y >= im->ysize)
+    return;
+  if (x < 0) {
+    width += x;
+    src -= x;
+    x = 0;
+  }
+  if (x + width > im->xsize) {
+    width = im->xsize - x;
+  }
+  if (x >= im->xsize || x + width <= 0 || width <= 0)
+    return;
+
+  if (src) {
+    /* avoid as much work as we can */
+    while (width > 0 && *src == 0) {
+      --width;
+      ++src;
+      ++x;
+    }
+    while (width > 0 && src[width-1] == 0) {
+      --width;
+    }
+  }
+  if (!width)
+    return;
+
+  alloc_line(r, width, r->im->bits <= 8 && fill->f_fill_with_color != NULL);
+  alloc_fill_line(r, width, r->im->bits <= 8 && fill->f_fill_with_color != NULL);
+
+#code r->im->bits <= 8 && fill->f_fill_with_color
+  if (IM_FILL_COMBINE(fill)) {
+    IM_COLOR *srcc = r->IM_SUFFIX(fill_line);
+    IM_COLOR *destc = r->IM_SUFFIX(line);
+    IM_FILL_FILLER(fill)(fill, x, y, width, fill_channels, r->IM_SUFFIX(fill_line));
+    if (src) {
+      unsigned char const *srcc = src;
+      IM_COLOR *fillc = r->IM_SUFFIX(fill_line);
+      i_img_dim work_width = width;
+      while (work_width) {
+	if (*srcc == 0) {
+	  fillc->channel[fill_channels-1] = 0;
+	}
+	else if (*srcc != 255) {
+	  fillc->channel[fill_channels-1] =
+	    fillc->channel[fill_channels-1] * *srcc / 255;
+	}
+	--work_width;
+	++srcc;
+	++fillc;
+      }
+    }
+    IM_GLIN(r->im, x, x+width, y, r->IM_SUFFIX(line));
+    IM_FILL_COMBINE(fill)(destc, srcc, r->im->channels, width);
+  }
+  else {
+    if (src) {
+      i_img_dim work_width = width;
+      IM_COLOR *srcc = r->IM_SUFFIX(fill_line);
+      IM_COLOR *destc = r->IM_SUFFIX(line);
+      int ch;
+
+      IM_FILL_FILLER(fill)(fill, x, y, width, fill_channels, r->IM_SUFFIX(fill_line));
+      IM_GLIN(r->im, x, x+width, y, r->IM_SUFFIX(line));
+      while (work_width) {
+	if (*src == 255) {
+	  /* just replace it */
+	  *destc = *srcc;
+	}
+	else if (*src) {
+	  for (ch = 0; ch < im->channels; ++ch) {
+	    IM_WORK_T work = (destc->channel[ch] * (255 - *src)
+			      + srcc->channel[ch] * *src) / 255.0;
+	    destc->channel[ch] = IM_LIMIT(work);
+	  }
+	}
+	
+	++srcc;
+	++destc;
+	++src;
+	--work_width;
+      }
+    }
+    else { /* if (src) */
+      IM_FILL_FILLER(fill)(fill, x, y, width, fill_channels, r->IM_SUFFIX(line));
+    }
+  }
+  IM_PLIN(im, x, x+width, y, r->IM_SUFFIX(line));
+#/code
+}
+
+#if 0
+
+/* for debuggin */
+
+static void
+dump_src(const char *note, unsigned char const *src, i_img_dim width) {
+  i_img_dim i;
+  printf("%s - %p/%" i_DF "\n", note, src, i_DFc(width));
+  for (i = 0; i < width; ++i) {
+    printf("%02x ", src[i]);
+  }
+  putchar('\n');
+}
+
+#endif
+
+#code
+
+/*
+=item i_render_line(r, x, y, width, source, fill)
+=category Blit tools
+
+Render the given fill with the coverage in C<source[0]> through
+C<source[width-1]>.
+
+=cut
+
+=item i_render_linef(r, x, y, width, source, fill)
+=category Blit tools
+
+Render the given fill with the coverage in C<source[0]> through
+C<source[width-1]>.
+
+=cut
+*/
+
+void
+IM_RENDER_LINE(i_render *r, i_img_dim x, i_img_dim y, i_img_dim width,
+	       const IM_SAMPLE_T *src, IM_COLOR *line,
+	       IM_FILL_COMBINE_F combine) {
+  i_img *im = r->im;
+  int src_chans = im->channels;
+
+  /* src must always have an alpha channel */
+  if (src_chans == 1 || src_chans == 3)
+    ++src_chans;
+
+  if (y < 0 || y >= im->ysize)
+    return;
+  if (x < 0) {
+    src -= x;
+    line -= x;
+    width += x;
+    x = 0;
+  }
+  if (x + width > im->xsize)
+    width = r->im->xsize - x;
+
+#ifdef IM_EIGHT_BIT
+  alloc_line(r, width, 1);
+#else
+  alloc_line(r, width, 0);
+#endif
+
+  if (combine) {
+    if (src) {
+      i_img_dim work_width = width;
+      IM_COLOR *linep = line;
+      const IM_SAMPLE_T *srcp = src;
+      int alpha_chan = src_chans - 1;
+      
+      while (work_width) {
+	if (*srcp) {
+	  if (*srcp != IM_SAMPLE_MAX) 
+	    linep->channel[alpha_chan] = 
+	      linep->channel[alpha_chan] * *srcp / IM_SAMPLE_MAX;
+	}
+	else {
+	  linep->channel[alpha_chan] = 0;
+	}
+	--work_width;
+	++srcp;
+	++linep;
+      }
+    }
+    IM_GLIN(im, x, x+width, y, r->IM_SUFFIX(line));
+    combine(r->IM_SUFFIX(line), line, im->channels, width);
+    IM_PLIN(im, x, x+width, y, r->IM_SUFFIX(line));
+  }
+  else {
+    if (src) {
+      i_img_dim work_width = width;
+      IM_COLOR *srcc = line;
+      IM_COLOR *destc = r->IM_SUFFIX(line);
+
+      IM_GLIN(im, x, x+width, y, r->IM_SUFFIX(line));
+      while (work_width) {
+	if (*src == 255) {
+	  /* just replace it */
+	  *destc = *srcc;
+	}
+	else if (*src) {
+	  int ch;
+	  for (ch = 0; ch < im->channels; ++ch) {
+	    IM_WORK_T work = (destc->channel[ch] * (IM_SAMPLE_MAX - *src)
+			      + srcc->channel[ch] * *src) / IM_SAMPLE_MAX;
+	    destc->channel[ch] = IM_LIMIT(work);
+	  }
+	}
+	
+	++srcc;
+	++destc;
+	++src;
+	--work_width;
+      }
+      IM_PLIN(im, x, x+width, y, r->IM_SUFFIX(line));
+    }
+    else {
+      IM_PLIN(im, x, x+width, y, line);
+    }
+  }
+}
+
+static
+void
+IM_SUFFIX(render_color_13)(i_render *r, i_img_dim x, i_img_dim y,
+			   i_img_dim width, unsigned char const *src,
+			   i_color const *color) {
+  i_img *im = r->im;
+  IM_COLOR *linep = r->IM_SUFFIX(line);
+  int ch, channels = im->channels;
+  i_img_dim fetch_offset;
+  int color_alpha = color->channel[im->channels];
+#undef STORE_COLOR
+#ifdef IM_EIGHT_BIT
+#define STORE_COLOR (*color)
+#else
+  i_fcolor fcolor;
+
+  for (ch = 0; ch < channels; ++ch) {
+    fcolor.channel[ch] = color->channel[ch] / 255.0;
+  }
+#define STORE_COLOR fcolor
+#endif
+ 
+  fetch_offset = 0;
+  if (color_alpha == 0xFF) {
+    while (fetch_offset < width && *src == 0xFF) {
+      *linep++ = STORE_COLOR;
+      ++src;
+      ++fetch_offset;
+    }
+  }
+  IM_GLIN(im, x+fetch_offset, x+width, y, linep);
+  while (fetch_offset < width) {
+#ifdef IM_EIGHT_BIT
+    IM_WORK_T alpha = *src++ * color_alpha / 255;
+#else
+    IM_WORK_T alpha = *src++ * color_alpha / (255.0 * 255.0);
+#endif
+    if (alpha == IM_SAMPLE_MAX)
+      *linep = STORE_COLOR;
+    else if (alpha) {
+      for (ch = 0; ch < channels; ++ch) {
+        linep->channel[ch] = (linep->channel[ch] * (IM_SAMPLE_MAX - alpha) 
+                              + STORE_COLOR.channel[ch] * alpha) / IM_SAMPLE_MAX;
+      }
+    }
+    ++linep;
+    ++fetch_offset;
+  }
+  IM_PLIN(im, x, x+width, y, r->IM_SUFFIX(line));
+}
+
+static
+void
+IM_SUFFIX(render_color_alpha)(i_render *r, i_img_dim x, i_img_dim y,
+			      i_img_dim width, unsigned char const *src,
+			      i_color const *color) {
+  IM_COLOR *linep = r->IM_SUFFIX(line);
+  int ch;
+  int alpha_channel = r->im->channels - 1;
+  i_img_dim fetch_offset;
+  int color_alpha = color->channel[alpha_channel];
+#undef STORE_COLOR
+#ifdef IM_EIGHT_BIT
+#define STORE_COLOR (*color)
+#else
+  i_fcolor fcolor;
+
+  for (ch = 0; ch < r->im->channels; ++ch) {
+    fcolor.channel[ch] = color->channel[ch] / 255.0;
+  }
+#define STORE_COLOR fcolor
+#endif
+
+  fetch_offset = 0;
+  if (color->channel[alpha_channel] == 0xFF) {
+    while (fetch_offset < width && *src == 0xFF) {
+      *linep++ = STORE_COLOR;
+      ++src;
+      ++fetch_offset;
+    }
+  }
+  IM_GLIN(r->im, x+fetch_offset, x+width, y, linep);
+  while (fetch_offset < width) {
+#ifdef IM_EIGHT_BIT
+    IM_WORK_T src_alpha = *src++ * color_alpha / 255;
+#else
+    IM_WORK_T src_alpha = *src++ * color_alpha / (255.0 * 255.0);
+#endif
+    if (src_alpha == IM_SAMPLE_MAX)
+      *linep = STORE_COLOR;
+    else if (src_alpha) {
+      IM_WORK_T remains = IM_SAMPLE_MAX - src_alpha;
+      IM_WORK_T orig_alpha = linep->channel[alpha_channel];
+      IM_WORK_T dest_alpha = src_alpha + (remains * orig_alpha) / IM_SAMPLE_MAX;
+      for (ch = 0; ch < alpha_channel; ++ch) {
+        linep->channel[ch] = ( src_alpha * STORE_COLOR.channel[ch]
+                               + remains * linep->channel[ch] * orig_alpha / IM_SAMPLE_MAX
+                               ) / dest_alpha;
+      }
+      linep->channel[alpha_channel] = dest_alpha;
+    }
+    ++linep;
+    ++fetch_offset;
+  }
+  IM_PLIN(r->im, x, x+width, y, r->IM_SUFFIX(line));
+#undef STORE_COLOR
+}
+
+/* combine a line of image data with an output line, both the input
+   and output lines include an alpha channel.
+
+   Both input and output lines have I<channels> of data, channels
+   should be either 2 or 4.
+*/
+
+static void
+IM_SUFFIX(combine_line_alpha)(IM_COLOR *out, IM_COLOR const *in, 
+			      int channels, i_img_dim count) {
+  int ch;
+  int alpha_channel = channels - 1;
+  
+  while (count) {
+    IM_WORK_T src_alpha = in->channel[alpha_channel];
+      
+    if (src_alpha == IM_SAMPLE_MAX)
+      *out = *in;
+    else if (src_alpha) {
+      IM_WORK_T remains = IM_SAMPLE_MAX - src_alpha;
+      IM_WORK_T orig_alpha = out->channel[alpha_channel];
+      IM_WORK_T dest_alpha = src_alpha + (remains * orig_alpha) / IM_SAMPLE_MAX;
+	
+      for (ch = 0; ch < alpha_channel; ++ch) {
+	out->channel[ch] = ( src_alpha * in->channel[ch]
+			     + remains * out->channel[ch] * orig_alpha / IM_SAMPLE_MAX
+			     ) / dest_alpha;
+      }
+      out->channel[alpha_channel] = dest_alpha;
+    }
+
+    ++out;
+    ++in;
+    --count;
+  }
+}
+
+/* combine a line of image data with an output line.  The input line
+   includes an alpha channel, the output line has no alpha channel.
+   
+   The input line has I<channels>+1 of color data.  The output line
+   has I<channels> of color data.
+*/
+
+static void
+IM_SUFFIX(combine_line_noalpha)
+     (IM_COLOR *out, IM_COLOR const *in, int channels, i_img_dim count) {
+  int ch;
+
+  while (count) {
+    IM_WORK_T src_alpha = in->channel[channels];
+    
+    if (src_alpha == IM_SAMPLE_MAX)
+      *out = *in;
+    else if (src_alpha) {
+      IM_WORK_T remains;
+      
+      remains = IM_SAMPLE_MAX - src_alpha;
+      for (ch = 0; ch < channels; ++ch) {
+	out->channel[ch] = ( in->channel[ch] * src_alpha
+			     + out->channel[ch] * remains) / IM_SAMPLE_MAX;
+      }
+    }
+    
+    ++out;
+    ++in;
+    --count;
+  }
+}
+
+/* combine a line of image data with an output line, both the input
+   and output lines include an alpha channel.
+
+   Both input and output lines have I<channels> of data, channels
+   should be either 2 or 4.
+
+   This variant does not modify the output alpha channel.
+*/
+
+static void
+IM_SUFFIX(combine_line_alpha_na)(IM_COLOR *out, IM_COLOR const *in, 
+				   int channels, i_img_dim count) {
+  int ch;
+  int alpha_channel = channels - 1;
+  
+  while (count) {
+    IM_WORK_T src_alpha = in->channel[alpha_channel];
+      
+    if (src_alpha == IM_SAMPLE_MAX)
+      *out = *in;
+    else if (src_alpha) {
+      IM_WORK_T remains = IM_SAMPLE_MAX - src_alpha;
+      IM_WORK_T orig_alpha = out->channel[alpha_channel];
+      IM_WORK_T dest_alpha = src_alpha + (remains * orig_alpha) / IM_SAMPLE_MAX;
+	
+      for (ch = 0; ch < alpha_channel; ++ch) {
+	out->channel[ch] = ( src_alpha * in->channel[ch]
+			     + remains * out->channel[ch] * orig_alpha / IM_SAMPLE_MAX
+			     ) / dest_alpha;
+      }
+    }
+
+    ++out;
+    ++in;
+    --count;
+  }
+}
+
+static void
+IM_SUFFIX(combine_line)(IM_COLOR *out, IM_COLOR const *in, int channels, i_img_dim count) {
+  if (channels == 2 || channels == 4)
+    IM_SUFFIX(combine_line_alpha)(out, in, channels, count);
+  else
+    IM_SUFFIX(combine_line_noalpha)(out, in, channels, count);
+}
+
+static void
+IM_SUFFIX(combine_line_na)(IM_COLOR *out, IM_COLOR const *in, int channels, i_img_dim count) {
+  if (channels == 2 || channels == 4)
+    IM_SUFFIX(combine_line_alpha_na)(out, in, channels, count);
+  else
+    IM_SUFFIX(combine_line_noalpha)(out, in, channels, count);
+}
+
+static void IM_SUFFIX(combine_alphablend)(IM_COLOR *, IM_COLOR *, int, i_img_dim);
+static void IM_SUFFIX(combine_mult)(IM_COLOR *, IM_COLOR *, int, i_img_dim);
+static void IM_SUFFIX(combine_dissolve)(IM_COLOR *, IM_COLOR *, int, i_img_dim);
+static void IM_SUFFIX(combine_add)(IM_COLOR *, IM_COLOR *, int, i_img_dim);
+static void IM_SUFFIX(combine_subtract)(IM_COLOR *, IM_COLOR *, int, i_img_dim);
+static void IM_SUFFIX(combine_diff)(IM_COLOR *, IM_COLOR *, int, i_img_dim);
+static void IM_SUFFIX(combine_darken)(IM_COLOR *, IM_COLOR *, int, i_img_dim);
+static void IM_SUFFIX(combine_lighten)(IM_COLOR *, IM_COLOR *, int, i_img_dim);
+static void IM_SUFFIX(combine_hue)(IM_COLOR *, IM_COLOR *, int, i_img_dim);
+static void IM_SUFFIX(combine_sat)(IM_COLOR *, IM_COLOR *, int, i_img_dim);
+static void IM_SUFFIX(combine_value)(IM_COLOR *, IM_COLOR *, int, i_img_dim);
+static void IM_SUFFIX(combine_color)(IM_COLOR *, IM_COLOR *, int, i_img_dim);
+
+static const IM_FILL_COMBINE_F IM_SUFFIX(combines)[] =
+{
+  NULL,
+  IM_SUFFIX(combine_alphablend),
+  IM_SUFFIX(combine_mult),
+  IM_SUFFIX(combine_dissolve),
+  IM_SUFFIX(combine_add),
+  IM_SUFFIX(combine_subtract),
+  IM_SUFFIX(combine_diff),
+  IM_SUFFIX(combine_lighten),
+  IM_SUFFIX(combine_darken),
+  IM_SUFFIX(combine_hue),
+  IM_SUFFIX(combine_sat),
+  IM_SUFFIX(combine_value),
+  IM_SUFFIX(combine_color)
+};
+
+#/code
+
+/*
+=item i_get_combine(combine, color_func, fcolor_func)
+
+=cut
+*/
+
+void i_get_combine(int combine, i_fill_combine_f *color_func, 
+                   i_fill_combinef_f *fcolor_func) {
+  if (combine < 0 || combine > sizeof(combines_8) / sizeof(*combines_8))
+    combine = 0;
+
+  *color_func = combines_8[combine];
+  *fcolor_func = combines_double[combine];
+}
+
+#code
+
+/*
+  Three good references for implementing combining modes:
+
+  http://www.w3.org/TR/2004/WD-SVG12-20041027/rendering.html
+  referenced as [svg1.2]
+
+  http://gimp-savvy.com/BOOK/index.html?node55.html
+  ("The Blending Modes", if it changes)
+  referenced as [savvy]
+
+  http://www.pegtop.net/delphi/articles/blendmodes/
+  referenced as [pegtop]
+
+  Where differences exist, I follow the SVG practice, the gimp
+  practice, and lastly pegtop.
+*/
+
+
+static void 
+IM_SUFFIX(combine_alphablend)(IM_COLOR *out, IM_COLOR *in, int channels, i_img_dim count) {
+  IM_SUFFIX(combine_line)(out, in, channels, count);
+}
+
+/*
+Dca' = Sca.Dca + Sca.(1 - Da) + Dca.(1 - Sa)
+Da'  = Sa.Da + Sa.(1 - Da) + Da.(1 - Sa)
+     = Sa + Da - Sa.Da
+
+When Da=1
+
+Dc' = Sc.Sa.Dc + Dc.(1 - Sa)
+ */
+static void
+IM_SUFFIX(combine_mult)(IM_COLOR *out, IM_COLOR *in, int channels, i_img_dim count) {
+  int ch;
+  IM_COLOR *inp = in;
+  IM_COLOR *outp = out;
+  i_img_dim work_count = count;
+  int color_channels = i_color_channels(channels);
+
+  if (i_has_alpha(channels)) {
+    while (work_count--) {
+      IM_WORK_T orig_alpha = outp->channel[color_channels];
+      IM_WORK_T src_alpha = inp->channel[color_channels];
+      
+      if (src_alpha) {
+	IM_WORK_T dest_alpha = src_alpha + orig_alpha 
+	  - (src_alpha * orig_alpha) / IM_SAMPLE_MAX;
+	
+	for (ch = 0; ch < color_channels; ++ch) { 
+	  outp->channel[ch] = 
+	    (inp->channel[ch] * src_alpha * outp->channel[ch] / IM_SAMPLE_MAX
+	     * orig_alpha
+	     + inp->channel[ch] * src_alpha * (IM_SAMPLE_MAX - orig_alpha)
+	     + outp->channel[ch] * orig_alpha * (IM_SAMPLE_MAX - src_alpha))
+	    / IM_SAMPLE_MAX / dest_alpha;
+	}
+	outp->channel[color_channels] = dest_alpha;
+      }
+      ++outp;
+      ++inp;
+    }
+  }
+  else {
+    while (work_count--) {
+      IM_WORK_T src_alpha = inp->channel[color_channels];
+      IM_WORK_T remains = IM_SAMPLE_MAX - src_alpha;
+      
+      if (src_alpha) {
+	for (ch = 0; ch < color_channels; ++ch) { 
+	  outp->channel[ch] = 
+	    (src_alpha * inp->channel[ch] * outp->channel[ch] / IM_SAMPLE_MAX
+	     + outp->channel[ch] * remains) / IM_SAMPLE_MAX;
+	}
+      }
+      ++outp;
+      ++inp;
+    }
+  }
+}
+
+static void 
+IM_SUFFIX(combine_dissolve)(IM_COLOR *out, IM_COLOR *in, int channels, i_img_dim count) {
+  int color_channels = i_color_channels(channels);
+  int ch;
+
+  if (i_has_alpha(channels)) {
+    while (count--) {
+      if (in->channel[channels-1] > rand() * ((double)IM_SAMPLE_MAX / RAND_MAX)) {
+	for (ch = 0; ch < color_channels; ++ch) {
+	  out->channel[ch] = in->channel[ch];
+	}
+	out->channel[color_channels] = IM_SAMPLE_MAX;
+      }
+      ++out;
+      ++in;
+    }
+  }
+  else {
+    while (count--) {
+      if (in->channel[channels] > rand() * ((double)IM_SAMPLE_MAX / RAND_MAX)) {
+	for (ch = 0; ch < color_channels; ++ch) {
+	  out->channel[ch] = in->channel[ch];
+	}
+      }
+      ++out;
+      ++in;
+    }
+  }
+}
+
+/*
+Dca' = Sca.Da + Dca.Sa + Sca.(1 - Da) + Dca.(1 - Sa)
+     = Sca + Dca
+Da'  = Sa.Da + Da.Sa + Sa.(1 - Da) + Da.(1 - Sa)
+     = Sa + Da
+*/
+
+static void
+IM_SUFFIX(combine_add)(IM_COLOR *out, IM_COLOR *in, int channels, i_img_dim count) {
+  int ch;
+  int color_channels = i_color_channels(channels);
+  i_img_dim work_count = count;
+  IM_COLOR *inp = in;
+  IM_COLOR *outp = out;
+
+  if (i_has_alpha(channels)) {
+    while (work_count--) {
+      IM_WORK_T src_alpha = inp->channel[color_channels];
+      if (src_alpha) {
+	IM_WORK_T orig_alpha = outp->channel[color_channels];
+	IM_WORK_T dest_alpha = src_alpha + orig_alpha;
+	if (dest_alpha > IM_SAMPLE_MAX)
+	  dest_alpha = IM_SAMPLE_MAX;
+	for (ch = 0; ch < color_channels; ++ch) { 
+	  IM_WORK_T total = (outp->channel[ch] * orig_alpha + inp->channel[ch] * src_alpha) / dest_alpha;
+	  if (total > IM_SAMPLE_MAX)
+	    total = IM_SAMPLE_MAX;
+	  outp->channel[ch] = total;
+	}
+	outp->channel[color_channels] = dest_alpha;
+      }
+      
+      ++outp;
+      ++inp;
+    }
+  }
+  else {
+    while (work_count--) {
+      IM_WORK_T src_alpha = inp->channel[color_channels];
+      if (src_alpha) {
+	for (ch = 0; ch < color_channels; ++ch) { 
+	  IM_WORK_T total = outp->channel[ch] + inp->channel[ch] * src_alpha / IM_SAMPLE_MAX;
+	  if (total > IM_SAMPLE_MAX)
+	    total = IM_SAMPLE_MAX;
+	  outp->channel[ch] = total;
+	} 
+      }
+      
+      ++outp;
+      ++inp;
+    }
+  }
+}
+
+/* 
+   [pegtop] documents this as max(A+B-256, 0) while [savvy] documents
+   it as max(A-B, 0). [svg1.2] doesn't cover it.
+
+   [savvy] doesn't document how it works with an alpha channel.  GIMP
+   actually seems to calculate the final value then use the alpha
+   channel to apply that to the target.
+ */
+static void
+IM_SUFFIX(combine_subtract)(IM_COLOR *out, IM_COLOR *in, int channels, i_img_dim count) {
+  int ch;
+  IM_COLOR const *inp = in;
+  IM_COLOR *outp = out;
+  i_img_dim work_count = count;
+  int color_channels = i_color_channels(channels);
+
+  if (i_has_alpha(channels)) {
+    while (work_count--) {
+      IM_WORK_T src_alpha = inp->channel[color_channels];
+      if (src_alpha) {
+	IM_WORK_T orig_alpha = outp->channel[color_channels];
+	IM_WORK_T dest_alpha = src_alpha + orig_alpha;
+	if (dest_alpha > IM_SAMPLE_MAX)
+	  dest_alpha = IM_SAMPLE_MAX;
+	for (ch = 0; ch < color_channels; ++ch) { 
+	  IM_WORK_T total = 
+	    (outp->channel[ch] * orig_alpha - inp->channel[ch] * src_alpha) 
+	    / dest_alpha;
+	  if (total < 0)
+	    total = 0;
+	  outp->channel[ch] = total;
+	}
+	outp->channel[color_channels] = dest_alpha;
+      }
+      ++outp;
+      ++inp;
+    }
+  }
+  else {
+    while (work_count--) {
+      IM_WORK_T src_alpha = inp->channel[color_channels];
+      if (src_alpha) {
+	for (ch = 0; ch < color_channels; ++ch) { 
+	  IM_WORK_T total = outp->channel[ch] - inp->channel[ch] * src_alpha / IM_SAMPLE_MAX;
+	  if (total < 0)
+	    total = 0;
+	  outp->channel[ch] = total;
+	} 
+      }
+      ++outp;
+      ++inp;
+    }
+  }
+}
+
+#ifdef IM_EIGHT_BIT
+#define IM_abs(x) abs(x)
+#else
+#define IM_abs(x) fabs(x)
+#endif
+
+/*
+Dca' = abs(Dca.Sa - Sca.Da) + Sca.(1 - Da) + Dca.(1 - Sa)
+     = Sca + Dca - 2.min(Sca.Da, Dca.Sa)
+Da'  = Sa + Da - Sa.Da 
+*/
+static void
+IM_SUFFIX(combine_diff)(IM_COLOR *out, IM_COLOR *in, int channels, i_img_dim count) {
+  int ch;
+  IM_COLOR const *inp = in;
+  IM_COLOR *outp = out;
+  i_img_dim work_count = count;
+  int color_channels = i_color_channels(channels);
+
+  if (i_has_alpha(channels)) {
+    while (work_count--) {
+      IM_WORK_T src_alpha = inp->channel[color_channels];
+      if (src_alpha) {
+	IM_WORK_T orig_alpha = outp->channel[color_channels];
+	IM_WORK_T dest_alpha = src_alpha + orig_alpha 
+	  - src_alpha * orig_alpha / IM_SAMPLE_MAX;
+	for (ch = 0; ch < color_channels; ++ch) {
+	  IM_WORK_T src = inp->channel[ch] * src_alpha;
+	  IM_WORK_T orig = outp->channel[ch] * orig_alpha;
+	  IM_WORK_T src_da = src * orig_alpha;
+	  IM_WORK_T dest_sa = orig * src_alpha;
+	  IM_WORK_T diff = src_da < dest_sa ? src_da : dest_sa;
+	  outp->channel[ch] = (src + orig - 2 * diff / IM_SAMPLE_MAX) / dest_alpha;
+	}
+	outp->channel[color_channels] = dest_alpha;
+      }
+      ++inp;
+      ++outp;
+    }
+  }
+  else {
+    while (work_count--) {
+      IM_WORK_T src_alpha = inp->channel[color_channels];
+      if (src_alpha) {
+	for (ch = 0; ch < color_channels; ++ch) {
+	  IM_WORK_T src = inp->channel[ch] * src_alpha;
+	  IM_WORK_T orig = outp->channel[ch] * IM_SAMPLE_MAX;
+	  IM_WORK_T src_da = src * IM_SAMPLE_MAX;
+	  IM_WORK_T dest_sa = orig * src_alpha;
+	  IM_WORK_T diff = src_da < dest_sa ? src_da : dest_sa;
+	  outp->channel[ch] = (src + orig - 2 * diff / IM_SAMPLE_MAX) / IM_SAMPLE_MAX;
+	}
+      }
+      ++inp;
+      ++outp;
+    }
+  }
+}
+
+#undef IM_abs
+
+/*
+  Dca' = min(Sca.Da, Dca.Sa) + Sca.(1 - Da) + Dca(1 - Sa)
+  Da' = Sa + Da - Sa.Da
+
+  To hoist some code:
+
+  Dca' = min(Sc.Sa.Da, Dc.Da.Sa) + Sca - Sca.Da + Dca - Dca.Sa
+       = Sa.Da.min(Sc, Dc) + Sca - Sca.Da + Dca - Dca.Sa
+
+  When Da=1:
+
+  Dca' = min(Sca.1, Dc.1.Sa) + Sca.(1 - 1) + Dc.1(1 - Sa)
+       = min(Sca, Dc.Sa) + Dc(1-Sa)
+       = Sa.min(Sc, Dc) + Dc - Dc.Sa
+  Da'  = Sa + 1 - Sa.1
+       = 1
+ */
+static void 
+IM_SUFFIX(combine_darken)(IM_COLOR *out, IM_COLOR *in, int channels, 
+			  i_img_dim count) {
+  int ch;
+  IM_COLOR const *inp = in;
+  IM_COLOR *outp = out;
+  i_img_dim work_count = count;
+  int color_channels = i_color_channels(channels);
+
+  if (i_has_alpha(channels)) {
+    while (work_count--) {
+      IM_WORK_T src_alpha = inp->channel[color_channels];
+
+      if (src_alpha) {
+	IM_WORK_T orig_alpha = outp->channel[color_channels];
+	IM_WORK_T dest_alpha = src_alpha + orig_alpha 
+	  - src_alpha * orig_alpha / IM_SAMPLE_MAX;
+	for (ch = 0; ch < color_channels; ++ch) { 
+	  IM_WORK_T Sca = inp->channel[ch] * src_alpha;
+	  IM_WORK_T Dca = outp->channel[ch] * orig_alpha;
+	  IM_WORK_T ScaDa = Sca * orig_alpha;
+	  IM_WORK_T DcaSa = Dca * src_alpha;
+	  IM_WORK_T minc = ScaDa < DcaSa ? ScaDa : DcaSa;
+	  outp->channel[ch] = 
+	    ( 
+	     minc + (Sca + Dca) * IM_SAMPLE_MAX
+	     - ScaDa - DcaSa
+	     ) / (IM_SAMPLE_MAX * dest_alpha);
+	} 
+	outp->channel[color_channels] = dest_alpha;
+      }
+      ++outp;
+      ++inp;
+    }
+  }
+  else {
+    while (work_count--) {
+      IM_WORK_T src_alpha = inp->channel[color_channels];
+
+      if (src_alpha) {
+	for (ch = 0; ch < color_channels; ++ch) { 
+	  IM_WORK_T minc = outp->channel[ch] < inp->channel[ch]
+	    ? outp->channel[ch] : inp->channel[ch];
+	  outp->channel[ch] = 
+	    ( 
+	     src_alpha * minc + 
+	     outp->channel[ch] * ( IM_SAMPLE_MAX - src_alpha )
+	     ) / IM_SAMPLE_MAX;
+	} 
+      }
+      ++outp;
+      ++inp;
+    }
+  }
+}
+
+static void 
+IM_SUFFIX(combine_lighten)(IM_COLOR *out, IM_COLOR *in, int channels, i_img_dim count) {
+  int ch;
+  IM_COLOR const *inp = in;
+  IM_COLOR *outp = out;
+  i_img_dim work_count = count;
+  int color_channels = i_color_channels(channels);
+
+  if (i_has_alpha(channels)) {
+    while (work_count--) {
+      IM_WORK_T src_alpha = inp->channel[color_channels];
+
+      if (src_alpha) {
+	IM_WORK_T orig_alpha = outp->channel[color_channels];
+	IM_WORK_T dest_alpha = src_alpha + orig_alpha 
+	  - src_alpha * orig_alpha / IM_SAMPLE_MAX;
+	for (ch = 0; ch < color_channels; ++ch) { 
+	  IM_WORK_T Sca = inp->channel[ch] * src_alpha;
+	  IM_WORK_T Dca = outp->channel[ch] * orig_alpha;
+	  IM_WORK_T ScaDa = Sca * orig_alpha;
+	  IM_WORK_T DcaSa = Dca * src_alpha;
+	  IM_WORK_T maxc = ScaDa > DcaSa ? ScaDa : DcaSa;
+	  outp->channel[ch] = 
+	    ( 
+	     maxc + (Sca + Dca) * IM_SAMPLE_MAX
+	     - ScaDa - DcaSa
+	     ) / (IM_SAMPLE_MAX * dest_alpha);
+	} 
+	outp->channel[color_channels] = dest_alpha;
+      }
+      ++outp;
+      ++inp;
+    }
+  }
+  else {
+    while (work_count--) {
+      IM_WORK_T src_alpha = inp->channel[color_channels];
+
+      if (src_alpha) {
+	for (ch = 0; ch < color_channels; ++ch) { 
+	  IM_WORK_T maxc = outp->channel[ch] > inp->channel[ch]
+	    ? outp->channel[ch] : inp->channel[ch];
+	  outp->channel[ch] = 
+	    ( 
+	     src_alpha * maxc + 
+	     outp->channel[ch] * ( IM_SAMPLE_MAX - src_alpha )
+	     ) / IM_SAMPLE_MAX;
+	} 
+      }
+      ++outp;
+      ++inp;
+    }
+  }
+}
+
+#if IM_EIGHT_BIT
+#define IM_RGB_TO_HSV i_rgb_to_hsv
+#define IM_HSV_TO_RGB i_hsv_to_rgb
+#else
+#define IM_RGB_TO_HSV i_rgb_to_hsvf
+#define IM_HSV_TO_RGB i_hsv_to_rgbf
+#endif
+
+static void 
+IM_SUFFIX(combine_hue)(IM_COLOR *out, IM_COLOR *in, int channels, i_img_dim count) {
+  if (channels > 2) {
+    IM_COLOR *inp = in;
+    IM_COLOR const *outp = out;
+    i_img_dim work_count = count;
+
+    if (i_has_alpha(channels)) {
+      while (work_count--) {
+	IM_COLOR c = *inp;
+	IM_RGB_TO_HSV(&c);
+	/* only transfer hue if there's saturation */
+	if (c.channel[1] && inp->channel[3] && outp->channel[3]) {
+	  *inp = *outp;
+	  IM_RGB_TO_HSV(inp);
+	  /* and no point in setting the target hue if the target has no sat */
+	  if (inp->channel[1]) {
+	    inp->channel[0] = c.channel[0];
+	    IM_HSV_TO_RGB(inp);
+	    inp->channel[3] = c.channel[3];
+	  }
+	  else {
+	    inp->channel[3] = 0;
+	  }
+	}
+	else {
+	  inp->channel[3] = 0;
+	}
+	
+	++outp;
+	++inp;
+      }
+    }
+    else {
+      while (work_count--) {
+	IM_COLOR c = *inp;
+	IM_RGB_TO_HSV(&c);
+	/* only transfer hue if there's saturation */
+	if (c.channel[1] && inp->channel[3]) {
+	  *inp = *outp;
+	  IM_RGB_TO_HSV(inp);
+	  /* and no point in setting the target hue if the target has no sat */
+	  if (inp->channel[1]) {
+	    inp->channel[0] = c.channel[0];
+	    IM_HSV_TO_RGB(inp);
+	    inp->channel[3] = c.channel[3];
+	  }
+	}
+	else {
+	  inp->channel[3] = 0;
+	}
+	
+	++outp;
+	++inp;
+      }
+    }
+
+    IM_SUFFIX(combine_line_na)(out, in, channels, count);
+  }
+}
+
+static void
+IM_SUFFIX(combine_sat)(IM_COLOR *out, IM_COLOR *in, int channels, i_img_dim count) {
+  if (channels > 2) {
+    IM_COLOR *inp = in;
+    IM_COLOR const *outp = out;
+    i_img_dim work_count = count;
+
+    while (work_count--) {
+      IM_COLOR c = *inp;
+      *inp = *outp;
+      IM_RGB_TO_HSV(&c);
+      IM_RGB_TO_HSV(inp);
+      inp->channel[1] = c.channel[1];
+      IM_HSV_TO_RGB(inp);
+      inp->channel[3] = c.channel[3];
+      ++outp;
+      ++inp;
+    }
+
+    IM_SUFFIX(combine_line_na)(out, in, channels, count);
+  }
+}
+
+static void 
+IM_SUFFIX(combine_value)(IM_COLOR *out, IM_COLOR *in, int channels, i_img_dim count) {
+  if (channels > 2) {
+    IM_COLOR *inp = in;
+    IM_COLOR const *outp = out;
+    i_img_dim work_count = count;
+
+    while (work_count--) {
+      IM_COLOR c = *inp;
+      *inp = *outp;
+      IM_RGB_TO_HSV(&c);
+      IM_RGB_TO_HSV(inp);
+      inp->channel[2] = c.channel[2];
+      IM_HSV_TO_RGB(inp);
+      inp->channel[3] = c.channel[3];
+      ++outp;
+      ++inp;
+    }
+  }
+
+  /* all images have a "value channel" - for greyscale it's the only
+     colour channel */
+  IM_SUFFIX(combine_line_na)(out, in, channels, count);
+}
+
+static void 
+IM_SUFFIX(combine_color)(IM_COLOR *out, IM_COLOR *in, int channels, i_img_dim count) {
+  if (channels > 2) {
+    IM_COLOR *inp = in;
+    IM_COLOR const *outp = out;
+    i_img_dim work_count = count;
+
+    while (work_count--) {
+      IM_COLOR c = *inp;
+      *inp = *outp;
+      IM_RGB_TO_HSV(&c);
+      IM_RGB_TO_HSV(inp);
+      inp->channel[0] = c.channel[0];
+      inp->channel[1] = c.channel[1];
+      IM_HSV_TO_RGB(inp);
+      inp->channel[3] = c.channel[3];
+      ++outp;
+      ++inp;
+    }
+
+    IM_SUFFIX(combine_line_na)(out, in, channels, count);
+  }
+}
+
+#undef IM_RGB_TO_HSV
+#undef IM_HSV_TO_RGB
+
+#/code

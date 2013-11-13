@@ -1,0 +1,356 @@
+#include "imager.h"
+#include "imageri.h"
+
+/*
+ * i_scale_mixing() is based on code contained in pnmscale.c, part of
+ * the netpbm distribution.  No code was copied from pnmscale but
+ * the algorthm was and for this I thank the netpbm crew.
+ *
+ * Tony
+ */
+
+/* pnmscale.c - read a portable anymap and scale it
+**
+** Copyright (C) 1989, 1991 by Jef Poskanzer.
+**
+** Permission to use, copy, modify, and distribute this software and its
+** documentation for any purpose and without fee is hereby granted, provided
+** that the above copyright notice appear in all copies and that both that
+** copyright notice and this permission notice appear in supporting
+** documentation.  This software is provided "as is" without express or
+** implied warranty.
+**
+*/
+
+
+static void
+zero_row(i_fcolor *row, i_img_dim width, int channels);
+
+#code
+static void
+IM_SUFFIX(accum_output_row)(i_fcolor *accum, double fraction, IM_COLOR const *in,
+		 i_img_dim width, int channels);
+static void
+IM_SUFFIX(horizontal_scale)(IM_COLOR *out, i_img_dim out_width, 
+                            i_fcolor const *in, i_img_dim in_width,
+                            int channels);
+#/code
+
+/*
+=item i_scale_mixing
+
+Returns a new image scaled to the given size.
+
+Unlike i_scale_axis() this does a simple coverage of pixels from
+source to target and doesn't resample.
+
+Adapted from pnmscale.
+
+=cut
+*/
+i_img *
+i_scale_mixing(i_img *src, i_img_dim x_out, i_img_dim y_out) {
+  i_img *result;
+  i_fcolor *accum_row = NULL;
+  i_img_dim x, y;
+  int ch;
+  size_t accum_row_bytes;
+  double rowsleft, fracrowtofill;
+  i_img_dim rowsread;
+  double y_scale;
+
+  mm_log((1, "i_scale_mixing(src %p, out(" i_DFp "))\n", 
+	  src, i_DFcp(x_out, y_out)));
+
+  i_clear_error();
+
+  if (x_out <= 0) {
+    i_push_errorf(0, "output width %" i_DF " invalid", i_DFc(x_out));
+    return NULL;
+  }
+  if (y_out <= 0) {
+    i_push_errorf(0, "output height %" i_DF " invalid", i_DFc(y_out));
+    return NULL;
+  }
+
+  if (x_out == src->xsize && y_out == src->ysize) {
+    return i_copy(src);
+  }
+
+  y_scale = y_out / (double)src->ysize;
+
+  result = i_sametype_chans(src, x_out, y_out, src->channels);
+  if (!result)
+    return NULL;
+
+  accum_row_bytes = sizeof(i_fcolor) * src->xsize;
+  if (accum_row_bytes / sizeof(i_fcolor) != src->xsize) {
+    i_push_error(0, "integer overflow allocating accumulator row buffer");
+    return NULL;
+  }
+
+  accum_row  = mymalloc(accum_row_bytes);
+
+#code src->bits <= 8
+  IM_COLOR *in_row = NULL;
+  IM_COLOR *xscale_row = NULL;
+  size_t in_row_bytes, out_row_bytes;
+
+  in_row_bytes = sizeof(IM_COLOR) * src->xsize;
+  if (in_row_bytes / sizeof(IM_COLOR) != src->xsize) {
+    i_push_error(0, "integer overflow allocating input row buffer");
+    return NULL;
+  }
+  out_row_bytes = sizeof(IM_COLOR) * x_out;
+  if (out_row_bytes / sizeof(IM_COLOR) != x_out) {
+    i_push_error(0, "integer overflow allocating output row buffer");
+    return NULL;
+  }
+
+  in_row     = mymalloc(in_row_bytes);
+  xscale_row = mymalloc(out_row_bytes);
+
+  rowsread = 0;
+  rowsleft = 0.0;
+  for (y = 0; y < y_out; ++y) {
+    if (y_out == src->ysize) {
+      /* no vertical scaling, just load it */
+#ifdef IM_EIGHT_BIT
+      i_img_dim x;
+      int ch;
+      /* load and convert to doubles */
+      IM_GLIN(src, 0, src->xsize, y, in_row);
+      for (x = 0; x < src->xsize; ++x) {
+        for (ch = 0; ch < src->channels; ++ch) {
+          accum_row[x].channel[ch] = in_row[x].channel[ch];
+        }
+      }
+#else
+      IM_GLIN(src, 0, src->xsize, y, accum_row);
+#endif
+      /* alpha adjust if needed */
+      if (src->channels == 2 || src->channels == 4) {
+	for (x = 0; x < src->xsize; ++x) {
+	  for (ch = 0; ch < src->channels-1; ++ch) {
+	    accum_row[x].channel[ch] *=
+	      accum_row[x].channel[src->channels-1] / IM_SAMPLE_MAX;
+	  }
+	}
+      }
+    }
+    else {
+      fracrowtofill = 1.0;
+      zero_row(accum_row, src->xsize, src->channels);
+      while (fracrowtofill > 0) {
+	if (rowsleft <= 0) {
+	  if (rowsread < src->ysize) {
+	    IM_GLIN(src, 0, src->xsize, rowsread, in_row);
+	    ++rowsread;
+	  }
+	  /* else just use the last row read */
+
+	  rowsleft = y_scale;
+	}
+	if (rowsleft < fracrowtofill) {
+	  IM_SUFFIX(accum_output_row)(accum_row, rowsleft, in_row, 
+                                      src->xsize, src->channels);
+	  fracrowtofill -= rowsleft;
+	  rowsleft = 0;
+	}
+	else {
+	  IM_SUFFIX(accum_output_row)(accum_row, fracrowtofill, in_row, 
+                                      src->xsize, src->channels);
+	  rowsleft -= fracrowtofill;
+	  fracrowtofill = 0;
+	}
+      }
+    }
+    /* we've accumulated a vertically scaled row */
+    if (x_out == src->xsize) {
+#if IM_EIGHT_BIT
+      i_img_dim x;
+      int ch;
+      /* no need to scale, but we need to convert it */
+      if (result->channels == 2 || result->channels == 4) {
+	int alpha_chan = result->channels - 1;
+	for (x = 0; x < x_out; ++x) {
+	  double alpha = accum_row[x].channel[alpha_chan] / IM_SAMPLE_MAX;
+	  if (alpha) {
+	    for (ch = 0; ch < alpha_chan; ++ch) {
+	      int val = accum_row[x].channel[ch] / alpha + 0.5;
+	      xscale_row[x].channel[ch] = IM_LIMIT(val);
+	    }
+	  }
+	  else {
+	    /* rather than leaving any color data as whatever was
+	       originally in the buffer, set it to black.  This isn't
+	       any more correct, but it gives us more compressible
+	       image data.
+	       RT #32324
+	    */
+	    for (ch = 0; ch < alpha_chan; ++ch) {
+	      xscale_row[x].channel[ch] = 0;
+	    }
+	  }
+	  xscale_row[x].channel[alpha_chan] = IM_LIMIT(accum_row[x].channel[alpha_chan]+0.5);
+	}
+      }
+      else {
+	for (x = 0; x < x_out; ++x) {
+	  for (ch = 0; ch < result->channels; ++ch)
+	    xscale_row[x].channel[ch] = IM_LIMIT(accum_row[x].channel[ch]+0.5);
+	}
+      }
+      IM_PLIN(result, 0, x_out, y, xscale_row);
+#else
+      IM_PLIN(result, 0, x_out, y, accum_row);
+#endif
+    }
+    else {
+      IM_SUFFIX(horizontal_scale)(xscale_row, x_out, accum_row, 
+                                  src->xsize, src->channels);
+      IM_PLIN(result, 0, x_out, y, xscale_row);
+    }
+  }
+  myfree(in_row);
+  myfree(xscale_row);
+#/code
+  myfree(accum_row);
+
+  return result;
+}
+
+static void
+zero_row(i_fcolor *row, i_img_dim width, int channels) {
+  i_img_dim x;
+  int ch;
+
+  /* with IEEE floats we could just use memset() but that's not
+     safe in general under ANSI C.
+     memset() is slightly faster.
+  */
+  for (x = 0; x < width; ++x) {
+    for (ch = 0; ch < channels; ++ch)
+      row[x].channel[ch] = 0.0;
+  }
+}
+
+#code
+
+static void
+IM_SUFFIX(accum_output_row)(i_fcolor *accum, double fraction, IM_COLOR const *in,
+		 i_img_dim width, int channels) {
+  i_img_dim x;
+  int ch;
+
+  /* it's tempting to change this into a pointer iteration loop but
+     modern CPUs do the indexing as part of the instruction */
+  if (channels == 2 || channels == 4) {
+    for (x = 0; x < width; ++x) {
+      for (ch = 0; ch < channels-1; ++ch) {
+	accum[x].channel[ch] += in[x].channel[ch] * fraction * in[x].channel[channels-1] / IM_SAMPLE_MAX;
+      }
+      accum[x].channel[channels-1] += in[x].channel[channels-1] * fraction;
+    }
+  }
+  else {
+    for (x = 0; x < width; ++x) {
+      for (ch = 0; ch < channels; ++ch) {
+	accum[x].channel[ch] += in[x].channel[ch] * fraction;
+      }
+    }
+  }
+}
+
+static void
+IM_SUFFIX(horizontal_scale)(IM_COLOR *out, i_img_dim out_width, 
+		 i_fcolor const *in, i_img_dim in_width,
+		 int channels) {
+  double frac_col_to_fill, frac_col_left;
+  i_img_dim in_x;
+  i_img_dim out_x;
+  double x_scale = (double)out_width / in_width;
+  int ch;
+  double accum[MAXCHANNELS] = { 0 };
+  
+  frac_col_to_fill = 1.0;
+  out_x = 0;
+  for (in_x = 0; in_x < in_width; ++in_x) {
+    frac_col_left = x_scale;
+    while (frac_col_left >= frac_col_to_fill) {
+      for (ch = 0; ch < channels; ++ch)
+	accum[ch] += frac_col_to_fill * in[in_x].channel[ch];
+
+      if (channels == 2 || channels == 4) {
+	int alpha_chan = channels - 1;
+	double alpha = accum[alpha_chan] / IM_SAMPLE_MAX;
+	if (alpha) {
+	  for (ch = 0; ch < alpha_chan; ++ch) {
+	    IM_WORK_T val = IM_ROUND(accum[ch] / alpha);
+	    out[out_x].channel[ch] = IM_LIMIT(val);
+	  }
+	}
+	else {
+	  for (ch = 0; ch < alpha_chan; ++ch) {
+	    /* See RT #32324 (and mention above) */
+	    out[out_x].channel[ch] = 0;
+	  }
+	}
+	out[out_x].channel[alpha_chan] = IM_LIMIT(IM_ROUND(accum[alpha_chan]));
+      }
+      else {
+	for (ch = 0; ch < channels; ++ch) {
+	  IM_WORK_T val = IM_ROUND(accum[ch]);
+	  out[out_x].channel[ch] = IM_LIMIT(val);
+	}
+      }
+      for (ch = 0; ch < channels; ++ch)
+	accum[ch] = 0;
+      frac_col_left -= frac_col_to_fill;
+      frac_col_to_fill = 1.0;
+      ++out_x;
+    }
+
+    if (frac_col_left > 0) {
+      for (ch = 0; ch < channels; ++ch) {
+	accum[ch] += frac_col_left * in[in_x].channel[ch];
+      }
+      frac_col_to_fill -= frac_col_left;
+    }
+  }
+
+  if (out_x < out_width-1 || out_x > out_width) {
+    i_fatal(3, "Internal error: out_x %d out of range (width %d)", out_x, out_width);
+  }
+  
+  if (out_x < out_width) {
+    for (ch = 0; ch < channels; ++ch) {
+      accum[ch] += frac_col_to_fill * in[in_width-1].channel[ch];
+    }
+    if (channels == 2 || channels == 4) {
+      int alpha_chan = channels - 1;
+      double alpha = accum[alpha_chan] / IM_SAMPLE_MAX;
+      if (alpha) {
+	for (ch = 0; ch < alpha_chan; ++ch) {
+	  IM_WORK_T val = IM_ROUND(accum[ch] / alpha);
+	  out[out_x].channel[ch] = IM_LIMIT(val);
+	}
+      }
+      else {
+	for (ch = 0; ch < alpha_chan; ++ch) {
+	  /* See RT #32324 (and mention above) */
+	  out[out_x].channel[ch] = 0;
+	}
+      }
+      out[out_x].channel[alpha_chan] = IM_LIMIT(IM_ROUND(accum[alpha_chan]));
+    }
+    else {
+      for (ch = 0; ch < channels; ++ch) {
+	IM_WORK_T val = IM_ROUND(accum[ch]);
+	out[out_x].channel[ch] = IM_LIMIT(val);
+      }
+    }
+  }
+}
+
+#/code

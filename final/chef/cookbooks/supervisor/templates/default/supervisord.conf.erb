@@ -1,0 +1,59 @@
+[unix_http_server]
+file=/tmp/supervisor.sock   ; (the path to the socket file)
+
+[supervisord]
+logfile=/tmp/supervisord.log ; (main log file;default $CWD/supervisord.log)
+logfile_maxbytes=50MB        ; (max main logfile bytes b4 rotation;default 50MB)
+logfile_backups=10           ; (num of main logfile rotation backups;default 10)
+loglevel=info                ; (log level;default info; others: debug,warn,trace)
+pidfile=/tmp/supervisord.pid ; (supervisord pidfile;default supervisord.pid)
+nodaemon=false               ; (start in foreground if true;default false)
+minfds=1024                  ; (min. avail startup file descriptors;default 1024)
+minprocs=200                 ; (min. avail process descriptors;default 200)
+
+[rpcinterface:supervisor]
+supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+
+[supervisorctl]
+serverurl=unix:///tmp/supervisor.sock ; use a unix:// URL  for a unix socket
+
+[program:isucon_perl]
+directory=/home/isucon/webapp/perl
+command=/etc/env.sh carton exec -- plackup -s Starlet --port 5000 -E production app.psgi
+user=isucon
+stdout_logfile=/tmp/isucon.perl.log
+stderr_logfile=/tmp/isucon.perl.log
+autostart=<%= (node[:hostname] =~ /1$/) ? "true" : "false" %>
+
+[program:isucon_ruby]
+directory=/home/isucon/webapp/ruby
+command=/etc/env.sh foreman start
+user=isucon
+stdout_logfile=/tmp/isucon.ruby.log
+stderr_logfile=/tmp/isucon.ruby.log
+autostart=false
+
+[program:isucon_python]
+directory=/home/isucon/webapp/python
+command=/etc/env.sh gunicorn -c gunicorn_config.py -w 10 app:app
+user=isucon
+stdout_logfile=/tmp/isucon.python.log
+stderr_logfile=/tmp/isucon.python.log
+autostart=false
+
+[program:isucon_node]
+directory=/home/isucon/webapp/nodejs
+command=/etc/env.sh npm start
+user=isucon
+stdout_logfile=/tmp/isucon.node.log
+stderr_logfile=/tmp/isucon.node.log
+autostart=false
+
+[program:isucon_go]
+directory=/home/isucon/webapp/go
+command=/etc/env.sh ./app
+user=isucon
+stdout_logfile=/tmp/isucon.go.log
+stderr_logfile=/tmp/isucon.go.log
+autostart=false
+

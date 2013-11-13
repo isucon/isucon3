@@ -1,0 +1,9 @@
+Imager::Font::W32 provides font support to Imager via the Win32 GDI
+API functions..
+
+It requires Win32 header files and libraries to be available.
+
+This is currently shipped as part of Imager, but may not be installed
+as part of Imager if headers or libraries aren't found at build time.,
+if your module or application requires Win32 font support support then
+add Imager::Font::W32 as a prerequisite.

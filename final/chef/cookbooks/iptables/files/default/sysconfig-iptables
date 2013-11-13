@@ -1,0 +1,20 @@
+*nat
+:PREROUTING ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+COMMIT
+
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:myrule - [0:0]
+-A INPUT -j myrule
+-A FORWARD -j myrule
+-A myrule -i lo -j ACCEPT
+-A myrule -p icmp -m icmp --icmp-type any -j ACCEPT
+-A myrule -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A myrule -p tcp -m state --state NEW -m tcp --dport 22 -j ACCEPT
+-A myrule -p tcp -m state --state NEW -m tcp --dport 80 -j ACCEPT
+-A myrule -j REJECT --reject-with icmp-host-prohibited
+COMMIT

@@ -1,0 +1,29 @@
+# typemaps for perl before 5.8
+# STRLEN isn't in the default typemap in older perls
+STRLEN	       	      	T_UV
+PerlIO *		T_INOUT
+
+#############################################################################
+INPUT
+# the pre-5.8.0 T_AVREF input map was fixed in 5.8.0
+T_AVREF
+	STMT_START {
+	    SV *const xsub_tmp_sv = $arg;
+	    SvGETMAGIC(xsub_tmp_sv);
+            if (SvROK(xsub_tmp_sv) && SvTYPE(SvRV(xsub_tmp_sv))==SVt_PVAV)
+            	$var = (AV*)SvRV(xsub_tmp_sv);
+            else
+            	Perl_croak(aTHX_ \"$var is not an array reference\");
+	} STMT_END
+
+# the pre-5.8.0 T_HVREF input map was fixed in 5.8.0
+T_HVREF
+	STMT_START {
+	    SV *const xsub_tmp_sv = $arg;
+	    SvGETMAGIC(xsub_tmp_sv);
+            if (SvROK(xsub_tmp_sv) && SvTYPE(SvRV(xsub_tmp_sv))==SVt_PVHV)
+                $var = (HV*)SvRV(xsub_tmp_sv);
+            else
+            	Perl_croak(aTHX_ \"$var is not a hash reference\");
+	} STMT_END
+
