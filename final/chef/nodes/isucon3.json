@@ -1,5 +1,5 @@
 {
-  "run_list": ["common-packages", "iptables", "local-accounts", "supervisor", "php", "golang", "httpd", "mysql", "xbuild"],
+  "run_list": ["common-packages", "iptables", "local-accounts", "supervisor", "php", "golang", "httpd", "mysql", "xbuild", "isucon3"],
   "xbuild": {
     "user": "isucon",
     "perl": {
