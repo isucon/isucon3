@@ -19,9 +19,5 @@ cookbook_file "/etc/httpd/conf.d/isucon.conf" do
 end
 
 service "httpd" do
- if node[:hostname] =~ /1$/
-   action [:enable, :start]
- else
-   action [:disable, :stop]
- end
+  action [:enable, :start]
 end
