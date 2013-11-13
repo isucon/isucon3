@@ -10,8 +10,8 @@ pushd ../webapp/data
 find . -name "*.jpg" -delete
 find . -name "*.png" -delete
 git checkout .  # restore default.png
+popd
 
 pushd ../webapp/perl
 carton install
 carton exec perl ../../bench/bulkloader.pl "$IMAGE_DIR"
-

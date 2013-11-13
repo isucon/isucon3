@@ -64,7 +64,7 @@ for my $uid ( 1 .. $users ) {
     );
     my $user_id = $dbh->last_insert_id;
     push @user_id, $user_id;
-    copy( $icon[ int rand(scalar @icon) ], "$data_dir/icon/$icon.png" )
+    copy( $icon[ int rand(scalar @icon) ], "$data_dir/icon/$icon.png" ) or warn $!
         unless -e "$data_dir/icon/$icon.png";
 
     for ( 1 .. int($entries + rand($entries * 2)) ) { # 最低 entries はエントリがある
@@ -76,7 +76,7 @@ for my $uid ( 1 .. $users ) {
             "INSERT INTO entries (id, user, image, publish_level, created_at) VALUES(?, ?, ?, ?, now())",
             pop(@entry_id), $user_id, $image, $publish_level,
         );
-        copy( $image[ int rand(scalar @image) ], "$data_dir/image/$image.jpg" )
+        copy( $image[ int rand(scalar @image) ], "$data_dir/image/$image.jpg" ) or warn $!
             unless -e "$data_dir/image/$image.jpg";
     }
 }
