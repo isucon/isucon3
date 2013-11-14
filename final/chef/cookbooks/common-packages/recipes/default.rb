@@ -35,7 +35,7 @@ end
 
 bash "enable remi" do
   user "root"
-  code "yum-config-manager --enable remi && yum-config-manager --setopt='remi.priority=9' --save"
+  code "yum-config-manager --enable remi && yum-config-manager --setopt='remi.priority=9' --save remi"
 end
 
 package "ImageMagick"
