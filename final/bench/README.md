@@ -2,11 +2,11 @@
 
     $ cd isucon3/final/benchmark
     $ carton install
-    $ carton exec perl benchmark.pl -d /home/isucon3/image_source http://127.0.0.1/
+    $ carton exec perl bench.pl -d /home/isucon/image_source http://127.0.0.1/
 
-### benchmark.pl
+### bench.pl
 
-    benchmark.pl -d [dir] [endpoint URL]
+    bench.pl -d [dir] [endpoint URL]
 
 options
 
