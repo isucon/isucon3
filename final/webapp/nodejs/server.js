@@ -14,7 +14,7 @@ if (cluster.isMaster) {
 
     var signals = ["SIGINT", "SIGTERM", "SIGQUIT"];
 
-    for (s in signals) {
+    for (var s in signals) {
         process.on(signals[s], function() {
             for (var j in childProcesses) {
                 childProcesses[j].process.kill();
@@ -50,8 +50,13 @@ else {
         app.use("/js", express.static(path.join(__dirname, "public/js")));
 
         app.use(function(req, res, next) {
-            config.database.database = config.database.dbname;
-            res.locals.mysql         = mysql.createClient(config.database);
+            res.locals.mysql = mysql.createClient({
+                host: config.database.host,
+                port: config.database.port,
+                user: config.database.username,
+                password: config.database.password,
+                database: config.database.dbname
+            });
 
             next();
         });

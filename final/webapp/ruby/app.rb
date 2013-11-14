@@ -49,6 +49,7 @@ class Isucon3Final < Sinatra::Base
           data = new.read
         end
         File.unlink(newfile)
+        tmp.unlink
       end
 
       data
@@ -72,11 +73,14 @@ class Isucon3Final < Sinatra::Base
         crop_y = 0
       end
 
-      tmp     = Tempfile.open("isucon")
-      newfile = "#{tmp.path}.#{ext}"
-      `convert -crop #{pixels}x#{pixels}+#{crop_x}+#{crop_y} #{orig} #{newfile}`
-      tmp.close
-      tmp.unlink
+      tmp = Tempfile.open("isucon")
+      begin
+        newfile = "#{tmp.path}.#{ext}"
+        `convert -crop #{pixels}x#{pixels}+#{crop_x}+#{crop_y} #{orig} #{newfile}`
+      ensure
+        tmp.close
+        tmp.unlink
+      end
 
       newfile
     end
