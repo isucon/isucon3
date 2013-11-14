@@ -7,8 +7,9 @@
 # 
 #
 
-package "mysql-community-release" do
+package "mysql55-libs" do
   action :remove
+  only_if { node[:platform] == "amazon" }
 end
 
 package "mysql"
