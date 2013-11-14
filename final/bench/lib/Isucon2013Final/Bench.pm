@@ -31,10 +31,10 @@ use constant {
     PUBLISH_LEVEL_PRIVATE        => 0,
     USER_AGENT                   => "ISUCON Agent 2013",
     SCORE_POST_ENTRY             => 10,
-    SCORE_TIMELINE_REFRECTION    => 10,
+    SCORE_TIMELINE_REFLECTION    => 10,
     SCORE_ICON                   => 0.1,
     SCORE_DEFAULT                => 1,
-    TIMELINE_REFRECTION_LIMIT    => 20,
+    TIMELINE_REFLECTION_LIMIT    => 20,
     IMAGE_DIFF_PERCENTAGE_LIMIT  => 5,
     ICON_DIFF_PERCENTAGE_LIMIT   => 20,
     TIMELINE_MAX_ENTRIES         => 30,
@@ -132,7 +132,7 @@ sub calc_SCORE_POST_ENTRY {
     return $s;
 }
 
-sub calc_SCORE_TIMELINE_REFRECTION {
+sub calc_SCORE_TIMELINE_REFLECTION {
     my $elapsed = shift;
     my $s = log( SCORE_POST_ENTRY / $elapsed ) / log(2);
     debugf "timeline score %.2f elapsed %.3f", $s, $elapsed;
@@ -609,7 +609,7 @@ sub timeline {
                 if ($e) {
                     debugf ddf $e;
                     $self->result->{success}
-                        += calc_SCORE_TIMELINE_REFRECTION($elapsed);
+                        += calc_SCORE_TIMELINE_REFLECTION($elapsed);
                     $cv->send($elapsed);
                 } else {
                     debugf "posted entry is not found in timeline";
@@ -656,8 +656,8 @@ sub timeline {
             };
     };
 
-    my $w2 = AE::timer TIMELINE_REFRECTION_LIMIT + 1, 0, sub {
-        critf "timeline refrection timeout";
+    my $w2 = AE::timer TIMELINE_REFLECTION_LIMIT + 1, 0, sub {
+        critf "timeline reflection timeout";
         exit(1);
     };
 
@@ -670,8 +670,8 @@ sub timeline {
     }
     undef $w2; # timer cancel
 
-    if ($elapsed > TIMELINE_REFRECTION_LIMIT) {
-        critf "timeline refrection timeout %.2f", $elapsed;
+    if ($elapsed > TIMELINE_REFLECTION_LIMIT) {
+        critf "timeline reflection timeout %.2f", $elapsed;
         exit(1);
     }
 
