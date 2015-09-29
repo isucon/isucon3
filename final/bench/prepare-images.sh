@@ -7,15 +7,15 @@ if ! [ -d "$IMAGE_DIR" ]; then
 fi
 
 pushd /tmp
-wget http://30d.jp/img/yapcasia/6/archive_m.zip
-wget http://30d.jp/img/yapcasia/6/archive_o1.zip
-unzip archive_m.zip
+wget -O archive_m1.zip http://30d.jp/img/yapcasia/6/archive_m1.zip
+wget -O archive_o1.zip http://30d.jp/img/yapcasia/6/archive_o1.zip
+unzip -o archive_m1.zip
 mv 30days_album_yapcasia_6/photo/large/*.jpg "$IMAGE_DIR"
-unzip archive_o1.zip
+unzip -o archive_o1.zip
 mv 30days_album_yapcasia_6/photo/original/*.jpg "$IMAGE_DIR"
 
-wget http://media.smashingmagazine.com/wp-content/uploads/images/addictive-flavour-v3/iconset-addictive-flavour-set.zip
-unzip iconset-addictive-flavour-set.zip
+wget -O iconset-addictive-flavour-set.zip http://media.smashingmagazine.com/wp-content/uploads/images/addictive-flavour-v3/iconset-addictive-flavour-set.zip
+unzip -o iconset-addictive-flavour-set.zip
 mv "png files"/*.png "$IMAGE_DIR"
 
 pushd "$IMAGE_DIR"
